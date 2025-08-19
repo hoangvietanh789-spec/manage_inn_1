@@ -1,3 +1,6 @@
+def say_hello(name: str) -> str:
+    return f"Hello, {name}! This is manage package."
+    
 def run():
     import json
     import pandas as pd
