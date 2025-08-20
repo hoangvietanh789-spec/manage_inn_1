@@ -102,35 +102,39 @@ def run():
             })
 
     df = pd.DataFrame(all_records)
-    with pd.ExcelWriter(file_report, engine="xlsxwriter") as writer:
-        df.to_excel(writer, index=False, sheet_name="Report")
-        workbook  = writer.book
-        worksheet = writer.sheets["Report"]
+    import pandas as pd
+    from openpyxl import load_workbook
+    from openpyxl.utils import get_column_letter
     
-        # Định dạng số có phân cách hàng nghìn
-        money_fmt = workbook.add_format({"num_format": "#,##0"})
-    
-        # Lấy danh sách cột
-        for idx, col in enumerate(df.columns):
-            series = df[col].astype(str)
-            max_len = max(
-                series.map(len).max(),
-                len(col)
-            ) + 2  # +2 để trống chút
-            worksheet.set_column(idx, idx, max_len)
-    
-            # Nếu là cột số thì áp dụng format
-            if df[col].dtype in ["int64", "float64"]:
-                worksheet.set_column(idx, idx, max_len, money_fmt)
-    
-        # Cột cuối zalo_link thành hyperlink
-        last_col_idx = len(df.columns) - 1
-        for row in range(2, ws.max_row + 1):
-            url = ws.cell(row=row, column=last_col).value
-            if url and str(url).startswith("http"):   # chỉ set nếu có link hợp lệ
-                ws.cell(row=row, column=last_col).hyperlink = url
-                ws.cell(row=row, column=last_col).value = "Zalo Link"
-                ws.cell(row=row, column=last_col).style = "Hyperlink"
+    # Xuất dữ liệu ra Excel bằng pandas + openpyxl
+    df = pd.DataFrame(all_records)
+    df.to_excel(file_report, index=False, sheet_name="Report", engine="openpyxl")
+    # Mở lại file bằng openpyxl để chỉnh sửa
+    wb = load_workbook(file_report)
+    ws = wb["Report"]
+    # Auto-fit độ rộng cột
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            if cell.value:
+                max_len = max(max_len, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = max_len + 2
+    # Định dạng tất cả cột số thành có phân cách hàng nghìn
+    for col in ws.iter_cols(min_row=2, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
+        for cell in col:
+            if isinstance(cell.value, (int, float)):
+                cell.number_format = "#,##0"
+    # Cột cuối zalo_link thành hyperlink
+    last_col = ws.max_column
+    for row in range(2, ws.max_row + 1):
+        url = ws.cell(row=row, column=last_col).value
+        if url and str(url).startswith("http"):
+            ws.cell(row=row, column=last_col).hyperlink = url
+            ws.cell(row=row, column=last_col).value = "Zalo Link"   # hoặc giữ nguyên url nếu muốn
+            ws.cell(row=row, column=last_col).style = "Hyperlink"
+    # Lưu lại
+    wb.save(file_report)
     
     with open(file_all, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
