@@ -204,3 +204,15 @@ def add_room(room_data, record_id=1):
     conn.execute(sql, (json.dumps(room_data), record_id))
     conn.commit()
     conn.close()
+
+def dien_nuoc():
+    from datetime import datetime
+    today = datetime.now()
+    this_month = datetime.strftime(today, "%Y%m")
+    mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
+    mes_water = f"Công tơ NƯỚC tháng {this_month}: "
+    elec_end = int(input(mes_elec))
+    water_end = int(input(mes_water))
+    update('tenants', f'{this_month}.electric_end', elec_end)
+    update('tenants', f'{this_month}.water_end', water_end)
+    print("done")
