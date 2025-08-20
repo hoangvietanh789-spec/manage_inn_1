@@ -72,9 +72,9 @@ def run():
 
     for month, rooms in data.items():
         for room, info in rooms.items():
-            if month in month_tocal:
+            if month in month_tocal and info['status'] == 'rented':
                 info = calculate(room, info)
-                for fo in ['electric_fee','water_fee','rent_price','payment','bill','due_amount']:
+                for fo in ['electric_fee','water_fee','rent_price','payment','bill','due_amount', 'status']:
                     update('tenants', f'{month}.{room}.{fo}', info[fo])
             all_records.append({
                 "month": month,
@@ -175,5 +175,32 @@ def import_json():
     )
     """)
     cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(price),))
+    conn.commit()
+    conn.close()
+    
+def add_room(room_data, record_id=1):
+    import json
+    import sqlite3
+    from datetime import datetime
+
+    today = datetime.now()
+    this_month = datetime.strftime(today, "%Y%m")
+    
+    month = input("Month: ")
+    month = month if month != '' else this_month
+    room_name = input("Room: ")
+    if room_name not in ["R1", "R2", "R3", "R4", "R5", "R11", "R22", "R33", "R44", "R55"]:
+        print(room_name, 'not in ["R1", "R2", "R3", "R4", "R5", "R11", "R22", "R33", "R44", "R55"]')
+        return
+    
+    from google.colab import drive
+    drive.mount('/content/drive')
+    conn = sqlite3.connect(db_file)
+    sql = f"""
+        UPDATE tenants
+        SET data = json_set(data, '$.{month}.{room_name}', json(?))
+        WHERE id = ?
+    """
+    conn.execute(sql, (json.dumps(room_data), record_id))
     conn.commit()
     conn.close()
