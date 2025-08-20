@@ -211,7 +211,14 @@ def dien_nuoc():
     this_month = datetime.strftime(today, "%Y%m")
     mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
     mes_water = f"Công tơ NƯỚC tháng {this_month}: "
-    room = input("Room: ")
+    room = input("Room: ").upper()
+    rooms = query('tenants')[this_month]
+    if room not in rooms:
+        print("Room not valid")
+        return
+    elif rooms[room]['status'] != 'rented':
+        print("Room not rented yet")
+        return
     elec_end = int(input(mes_elec))
     water_end = int(input(mes_water))
     update('tenants', f'{this_month}.{room}.electric_end', elec_end)
