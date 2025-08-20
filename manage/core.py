@@ -264,6 +264,8 @@ def dien_nuoc():
         return
     elec_end = int(input(mes_elec))
     water_end = int(input(mes_water))
+    elec_end = elec_end if elec_end > room['electric_start'] else room['electric_start']
+    water_end = water_end if water_end > room['water_end'] else room['water_end']
     update('tenants', f'{this_month}.{room}.electric_end', elec_end)
     update('tenants', f'{this_month}.{room}.water_end', water_end)
     print("done")
