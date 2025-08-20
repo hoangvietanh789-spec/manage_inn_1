@@ -125,9 +125,12 @@ def run():
     
         # Cột cuối zalo_link thành hyperlink
         last_col_idx = len(df.columns) - 1
-        for row in range(len(df)):
-            url = df.iloc[row, last_col_idx]
-            worksheet.write_url(row + 1, last_col_idx, url, string="Zalo Link")
+        for row in range(2, ws.max_row + 1):
+            url = ws.cell(row=row, column=last_col).value
+            if url and str(url).startswith("http"):   # chỉ set nếu có link hợp lệ
+                ws.cell(row=row, column=last_col).hyperlink = url
+                ws.cell(row=row, column=last_col).value = "Zalo Link"
+                ws.cell(row=row, column=last_col).style = "Hyperlink"
     
     with open(file_all, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
