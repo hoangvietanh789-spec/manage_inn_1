@@ -1,7 +1,7 @@
 db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
-import warnings
-warnings.simplefilter("ignore")
 def run():
+    import warnings
+    warnings.simplefilter("ignore")
     import json
     import pandas as pd
     from datetime import datetime
@@ -109,6 +109,8 @@ def view():
     return(HTML(f'<a href="{url}" target="_blank">👉 Mở trang web</a>'))
 
 def query(table):
+    import warnings
+    warnings.simplefilter("ignore")
     import sqlite3
     import json
     from google.colab import drive
@@ -128,6 +130,8 @@ def query(table):
 # ('prices', '202507.electric_price', 3000/"abc")
 # =============================================================================
 def update(table, object_address, value_update):
+    import warnings
+    warnings.simplefilter("ignore")
     import sqlite3
     from google.colab import drive
     drive.mount('/content/drive')
@@ -147,6 +151,8 @@ def update(table, object_address, value_update):
         conn.close()
     
 def import_json():
+    import warnings
+    warnings.simplefilter("ignore")
     import json
     import sqlite3
     from google.colab import drive
@@ -181,6 +187,8 @@ def import_json():
     conn.close()
     
 def add_room(room_data, record_id=1):
+    import warnings
+    warnings.simplefilter("ignore")
     import json
     import sqlite3
     from datetime import datetime
@@ -206,8 +214,10 @@ def add_room(room_data, record_id=1):
     conn.execute(sql, (json.dumps(room_data), record_id))
     conn.commit()
     conn.close()
-
+    
 def dien_nuoc():
+    import warnings
+    warnings.simplefilter("ignore")
     from datetime import datetime
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
@@ -226,3 +236,4 @@ def dien_nuoc():
     update('tenants', f'{this_month}.{room}.electric_end', elec_end)
     update('tenants', f'{this_month}.{room}.water_end', water_end)
     print("done")
+    
