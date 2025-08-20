@@ -1,4 +1,6 @@
 db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
+import warnings
+warnings.simplefilter("ignore")
 def run():
     import json
     import pandas as pd
