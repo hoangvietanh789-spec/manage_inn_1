@@ -102,7 +102,33 @@ def run():
             })
 
     df = pd.DataFrame(all_records)
-    df.to_excel(file_report, index=False)
+    with pd.ExcelWriter(file_report, engine="xlsxwriter") as writer:
+        df.to_excel(writer, index=False, sheet_name="Report")
+        workbook  = writer.book
+        worksheet = writer.sheets["Report"]
+    
+        # Định dạng số có phân cách hàng nghìn
+        money_fmt = workbook.add_format({"num_format": "#,##0"})
+    
+        # Lấy danh sách cột
+        for idx, col in enumerate(df.columns):
+            series = df[col].astype(str)
+            max_len = max(
+                series.map(len).max(),
+                len(col)
+            ) + 2  # +2 để trống chút
+            worksheet.set_column(idx, idx, max_len)
+    
+            # Nếu là cột số thì áp dụng format
+            if df[col].dtype in ["int64", "float64"]:
+                worksheet.set_column(idx, idx, max_len, money_fmt)
+    
+        # Cột cuối zalo_link thành hyperlink
+        last_col_idx = len(df.columns) - 1
+        for row in range(len(df)):
+            url = df.iloc[row, last_col_idx]
+            worksheet.write_url(row + 1, last_col_idx, url, string="Zalo Link")
+    
     with open(file_all, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     with open(file_price, "w", encoding="utf-8") as f:
