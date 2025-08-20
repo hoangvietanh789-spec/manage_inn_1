@@ -211,8 +211,9 @@ def dien_nuoc():
     this_month = datetime.strftime(today, "%Y%m")
     mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
     mes_water = f"Công tơ NƯỚC tháng {this_month}: "
+    room = input("Room: ")
     elec_end = int(input(mes_elec))
     water_end = int(input(mes_water))
-    update('tenants', f'{this_month}.electric_end', elec_end)
-    update('tenants', f'{this_month}.water_end', water_end)
+    update('tenants', f'{this_month}.{room}.electric_end', elec_end)
+    update('tenants', f'{this_month}.{room}.water_end', water_end)
     print("done")
