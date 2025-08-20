@@ -166,7 +166,7 @@ def query(table):
     return(x)
 
 # =============================================================================
-# ('prices', '202507.electric_price', 3000/"abc")
+# ('prices', '202507.R3.electric_price', 3000/"abc")
 # =============================================================================
 def update(table, object_address, value_update):
     import sqlite3
