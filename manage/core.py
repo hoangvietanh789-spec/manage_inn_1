@@ -1,7 +1,15 @@
 db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
+
+def safe_mount_drive(mount_point="/content/drive"):
+    import os
+    import io
+    import contextlib
+    from google.colab import drive
+    if not os.path.ismount(mount_point):
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            drive.mount(mount_point)
 def run():
-    import warnings
-    warnings.simplefilter("ignore")
     import json
     import pandas as pd
     from datetime import datetime
@@ -10,7 +18,7 @@ def run():
     this_month = datetime.strftime(today, "%Y%m")
 
     from google.colab import drive
-    drive.mount('/content/drive')
+    safe_mount_drive()
 
     file_price = "/content/drive/MyDrive/Dau_tu/data/price.json"
     file_all = "/content/drive/MyDrive/Dau_tu/data/all.json"
@@ -109,12 +117,10 @@ def view():
     return(HTML(f'<a href="{url}" target="_blank">👉 Mở trang web</a>'))
 
 def query(table):
-    import warnings
-    warnings.simplefilter("ignore")
     import sqlite3
     import json
     from google.colab import drive
-    drive.mount('/content/drive')
+    safe_mount_drive()
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     try:
@@ -130,11 +136,9 @@ def query(table):
 # ('prices', '202507.electric_price', 3000/"abc")
 # =============================================================================
 def update(table, object_address, value_update):
-    import warnings
-    warnings.simplefilter("ignore")
     import sqlite3
     from google.colab import drive
-    drive.mount('/content/drive')
+    safe_mount_drive()
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     try:
@@ -151,12 +155,10 @@ def update(table, object_address, value_update):
         conn.close()
     
 def import_json():
-    import warnings
-    warnings.simplefilter("ignore")
     import json
     import sqlite3
     from google.colab import drive
-    drive.mount('/content/drive')
+    safe_mount_drive()
     file_all = "/content/drive/MyDrive/Dau_tu/data/all.json"
     file_price = "/content/drive/MyDrive/Dau_tu/data/price.json"
     with open(file_price) as file:
@@ -187,8 +189,6 @@ def import_json():
     conn.close()
     
 def add_room(room_data, record_id=1):
-    import warnings
-    warnings.simplefilter("ignore")
     import json
     import sqlite3
     from datetime import datetime
@@ -204,7 +204,7 @@ def add_room(room_data, record_id=1):
         return
     
     from google.colab import drive
-    drive.mount('/content/drive')
+    safe_mount_drive()
     conn = sqlite3.connect(db_file)
     sql = f"""
         UPDATE tenants
@@ -216,8 +216,6 @@ def add_room(room_data, record_id=1):
     conn.close()
     
 def dien_nuoc():
-    import warnings
-    warnings.simplefilter("ignore")
     from datetime import datetime
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
