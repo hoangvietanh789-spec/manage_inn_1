@@ -1,39 +1,43 @@
+db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
 def run():
     import json
     import pandas as pd
-    import re
     from datetime import datetime
-    from datetime import timedelta
-    from dateutil.relativedelta import relativedelta
 
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
-    pre_month_day = today - relativedelta(months = 1)
-    pre_month = datetime.strftime(pre_month_day, "%Y%m")
 
     from google.colab import drive
     drive.mount('/content/drive')
 
-    file_all = "/content/drive/MyDrive/Dau_tu/data/all.json"
     file_price = "/content/drive/MyDrive/Dau_tu/data/price.json"
+    file_all = "/content/drive/MyDrive/Dau_tu/data/all.json"
     file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"
-    html_path = "/content/drive/MyDrive/Dau_tu/report/rent_report.html"
 
-    # --- Config đơn giá ---
-    with open(file_price) as file:
-        price = json.loads(file.read())
-
+    price = query('prices')
     electric_price = price[this_month]['electric_price']
     water_price = price[this_month]['water_price']
 
-    # --- Load dữ liệu JSON ---
-    with open(file_all, "r", encoding="utf-8") as f:
-        raw = f.read()
-
-    # Xóa dấu phẩy thừa trước } hoặc ]
-    clean = re.sub(r",(\s*[}\]])", r"\1", raw)
-    data = json.loads(clean)
+    data = query('tenants')
     all_records = []
+    print(data.keys())
+    month_tocal = [this_month] 
+    ask = input("Month to calculate [add / all]: ")
+    if ask == 'all':
+        month_tocal = list(data.keys())
+    else:
+        while ask !=  '':
+            if ask in data.keys():
+                month_tocal.append(ask)
+            else:
+                print(ask, "not in data")
+            ask = input(" ")
+        for i in month_tocal:
+            try:
+                datetime.strptime(i, "%Y%m")
+            except Exception as ex:
+                print(ex)
+    month_tocal = list(set(month_tocal))
 
     def calculate(room,info):
         if info["electric_start"] is not None and info["electric_end"] is not None:
@@ -68,8 +72,10 @@ def run():
 
     for month, rooms in data.items():
         for room, info in rooms.items():
-            if month != this_month:
+            if month in month_tocal:
                 info = calculate(room, info)
+                for fo in info:
+                    update('tenants', f'{month}.{room}.{fo}', info[fo])
             all_records.append({
                 "month": month,
                 "room": room,
@@ -87,116 +93,87 @@ def run():
 
     df = pd.DataFrame(all_records)
     df.to_excel(file_report, index=False)
-
-
-    # --- Lưu lại file JSON đã cập nhật ---
-    with open("rent_data_updated.json", "w", encoding="utf-8") as f:
+    with open(file_all, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+    with open(file_price, "w", encoding="utf-8") as f:
+        json.dump(price, f, ensure_ascii=False, indent=4)
 
     print("✅ Đã tạo rent_report.csv và rent_data_updated.json kèm cột Zalo link")
 
-
-
-    import os
-    def extract_phone(s: str):
-        """Trích số điện thoại VN bắt đầu bằng 0, độ dài 9–11 số từ chuỗi bất kỳ."""
-        if not s:
-            return None
-        m = re.search(r'(0\d{8,10})', s)
-        return m.group(1) if m else None
-
-    def fmt(x):
-        """Định dạng số có dấu phẩy, trả '0' nếu None/False."""
-        try:
-            return f"{(0 if x in [None, ''] else x):,.0f}"
-        except Exception:
-            return "0"
-
-    # Tạo từng hàng HTML
-    rows_html = []
-    for rec in all_records:
-        phone = extract_phone(rec.get("tenant"))
-        zalo_html = f'<a href="https://zalo.me/{phone}" target="_blank" class="zalo-button">Zalo</a>' if phone else "-"
-
-        rows_html.append(f"""
-          <tr>
-            <td>{rec.get('month','')}</td>
-            <td>{rec.get('room','')}</td>
-            <td>{rec.get('tenant','')}</td>
-            <td>{fmt(rec.get('rent_price'))}</td>
-            <td>{fmt(rec.get('electric_fee'))}</td>
-            <td>{fmt(rec.get('water_fee'))}</td>
-            <td>{fmt(rec.get('bill'))}</td>
-            <td>{fmt(rec.get('payment'))}</td>
-            <td>{fmt(rec.get('due_amount'))}</td>
-            <td>{rec.get('status','')}</td>
-            <td>{zalo_html}</td>
-          </tr>
-        """)
-
-    HTML_TEMPLATE = f"""<!doctype html>
-    <html lang="vi">
-      <head>
-        <meta charset="utf-8">
-        <title>Báo cáo Quản lý Nhà trọ</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-          body {{ font-family: Arial, sans-serif; margin: 20px; }}
-          h2 {{ margin-top: 0; }}
-          table {{ border-collapse: collapse; width: 100%; margin-bottom: 16px; }}
-          th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; }}
-          th {{ background-color: #f2f2f2; position: sticky; top: 0; }}
-          tr:nth-child(even) {{ background: #fafafa; }}
-          .zalo-button {{
-              display: inline-block;
-              background-color: #0068ff;
-              color: white;
-              padding: 6px 12px;
-              border-radius: 6px;
-              text-decoration: none;
-              font-weight: bold;
-              font-size: 13px;
-          }}
-          .zalo-button:hover {{ background-color: #0050cc; }}
-          .note {{ color: #666; font-size: 12px; }}
-          .wrap {{ overflow-x: auto; }}
-        </style>
-      </head>
-      <body>
-        <h2>Báo cáo Quản lý Nhà trọ</h2>
-        <div class="wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Tháng</th>
-                <th>Phòng</th>
-                <th>Người thuê</th>
-                <th>Giá thuê</th>
-                <th>Tiền điện</th>
-                <th>Tiền nước</th>
-                <th>Tổng bill</th>
-                <th>Đã trả</th>
-                <th>Còn nợ</th>
-                <th>Trạng thái</th>
-                <th>Liên hệ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {''.join(rows_html)}
-            </tbody>
-          </table>
-        </div>
-        <div class="note">* Nút Zalo tự trích số điện thoại từ cột "Người thuê" nếu có.</div>
-      </body>
-    </html>
-    """
-
-    with open(html_path, "w", encoding="utf-8") as f:
-        f.write(HTML_TEMPLATE)
-
-    print(f"✅ Đã tạo file HTML: {html_path}")
 
 def view():
     from IPython.display import HTML
     url = "https://sites.google.com/view/trosupham2vietxocodien"
     return(HTML(f'<a href="{url}" target="_blank">👉 Mở trang web</a>'))
+
+def query(table):
+    import sqlite3
+    import json
+    from google.colab import drive
+    drive.mount('/content/drive')
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(f"SELECT * FROM {table} WHERE id = 1")
+        x = json.loads(cursor.fetchone()[1])
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()
+    return(x)
+
+# =============================================================================
+# ('prices', '202507.electric_price', 3000")
+# =============================================================================
+def update(table, object_address, value_update):
+    import sqlite3
+    from google.colab import drive
+    drive.mount('/content/drive')
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(f"""
+                    UPDATE {table}
+                    SET data = json_set(data, '$.{object_address}', ?)
+                    WHERE id = 1
+                    """, (value_update,)
+            )
+        conn.commit()
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()
+    
+def import_json():
+    import json
+    import sqlite3
+    from google.colab import drive
+    drive.mount('/content/drive')
+    file_all = "/content/drive/MyDrive/Dau_tu/data/all.json"
+    file_price = "/content/drive/MyDrive/Dau_tu/data/price.json"
+    with open(file_price) as file:
+        price = json.loads(file.read())
+
+    with open(file_all, "r") as f:
+            tenant = json.loads(f.read())
+    conn = sqlite3.connect("/content/drive/MyDrive/Dau_tu/data/inn.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS tenants (
+        id INTEGER PRIMARY KEY,
+        data JSON
+    )
+    """)
+    cursor.execute("INSERT INTO tenants (data) VALUES (?)", (json.dumps(tenant),))
+    conn.commit()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS prices (
+        id INTEGER PRIMARY KEY,
+        data JSON
+    )
+    """)
+    cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(price),))
+    conn.commit()
+    conn.close()
