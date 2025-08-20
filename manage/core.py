@@ -74,7 +74,7 @@ def run():
         for room, info in rooms.items():
             if month in month_tocal:
                 info = calculate(room, info)
-                for fo in info:
+                for fo in ['electric_fee','water_fee','rent_price','payment','bill','due_amount']:
                     update('tenants', f'{month}.{room}.{fo}', info[fo])
             all_records.append({
                 "month": month,
