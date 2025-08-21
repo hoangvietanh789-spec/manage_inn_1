@@ -142,7 +142,7 @@ def run(*month_input):
     with open(file_price, "w", encoding="utf-8") as f:
         json.dump(price, f, ensure_ascii=False, indent=4)
 
-    print("✅ Đã tạo rent_report.csv và rent_data_updated.json kèm cột Zalo link")
+    print("✅ created rent_report.xlsx,all.json,price.json")
 
 def view():
     from IPython.display import HTML
