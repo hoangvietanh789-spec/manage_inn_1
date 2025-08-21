@@ -9,7 +9,7 @@ def safe_mount_drive(mount_point="/content/drive"):
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
             drive.mount(mount_point)
-def run():
+def run(*month_input):
     import json
     import pandas as pd
     from datetime import datetime
@@ -32,21 +32,22 @@ def run():
     all_records = []
     print(data.keys())
     month_tocal = [this_month] 
-    ask = input("Month to calculate [add / all]: ")
-    if ask == 'all':
-        month_tocal = list(data.keys())
-    else:
-        while ask !=  '':
-            if ask in data.keys():
-                month_tocal.append(ask)
-            else:
-                print(ask, "not in data")
-            ask = input(" ")
-        for i in month_tocal:
-            try:
-                datetime.strptime(i, "%Y%m")
-            except Exception as ex:
-                print(ex)
+    if len(month_input) == 0:
+        ask = input("Month to calculate [add / all]: ")
+        if ask == 'all':
+            month_tocal = list(data.keys())
+        else:
+            while ask !=  '':
+                if ask in data.keys():
+                    month_tocal.append(ask)
+                else:
+                    print(ask, "not in data")
+                ask = input(" ")
+            for i in month_tocal:
+                try:
+                    datetime.strptime(i, "%Y%m")
+                except Exception as ex:
+                    print(ex)
     month_tocal = list(set(month_tocal))
 
     def calculate(room,info):
@@ -143,7 +144,6 @@ def run():
 
     print("✅ Đã tạo rent_report.csv và rent_data_updated.json kèm cột Zalo link")
 
-
 def view():
     from IPython.display import HTML
     url = "https://sites.google.com/view/trosupham2vietxocodien"
@@ -220,7 +220,47 @@ def import_json():
     cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(price),))
     conn.commit()
     conn.close()
-    
+
+def dien_nuoc():
+    from datetime import datetime
+    today = datetime.now()
+    this_month = datetime.strftime(today, "%Y%m")
+    mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
+    mes_water = f"Công tơ NƯỚC tháng {this_month}: "
+    room = input("Room: ").upper()
+    rooms = query('tenants')[this_month]
+    if room not in rooms:
+        print("Room not valid")
+        return
+    elif rooms[room]['status'] != 'rented':
+        print("Room not rented yet")
+        return
+    elec_end = int(input(mes_elec))
+    water_end = int(input(mes_water))
+    elec_end = elec_end if elec_end > rooms[room]['electric_start'] else rooms[room]['electric_start']
+    water_end = water_end if water_end > rooms[room]['water_end'] else rooms[room]['water_end']
+    update('tenants', f'{this_month}.{room}.electric_end', elec_end)
+    update('tenants', f'{this_month}.{room}.water_end', water_end)
+    print("done")
+   
+def pay():
+    from datetime import datetime
+    today = datetime.now()
+    this_month = datetime.strftime(today, "%Y%m")
+    room = input("Room: ").upper()
+    rooms = query('tenants')[this_month]
+    if room not in rooms:
+        print("Room not valid")
+        return
+    elif rooms[room]['status'] != 'rented':
+        print("Room not rented yet")
+        return
+    payment = int(input("Payment: "))
+    update('tenants', f'{this_month}.{room}.payment', payment)
+    update('tenants', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
+    print(f"{room} marked paid {payment} at {datetime.strftime(today, "%d/%m/%Y")}")
+    run(1) # (1) to avoid asking month
+
 def add_room(room_data, record_id=1):
     import json
     import sqlite3
@@ -248,26 +288,45 @@ def add_room(room_data, record_id=1):
     conn.commit()
     conn.close()
     
-def dien_nuoc():
+def new_month():
+    import copy
     from datetime import datetime
-    today = datetime.now()
-    this_month = datetime.strftime(today, "%Y%m")
-    mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
-    mes_water = f"Công tơ NƯỚC tháng {this_month}: "
-    room = input("Room: ").upper()
-    rooms = query('tenants')[this_month]
-    if room not in rooms:
-        print("Room not valid")
-        return
-    elif rooms[room]['status'] != 'rented':
-        print("Room not rented yet")
-        return
-    elec_end = int(input(mes_elec))
-    water_end = int(input(mes_water))
-    elec_end = elec_end if elec_end > rooms[room]['electric_start'] else rooms[room]['electric_start']
-    water_end = water_end if water_end > rooms[room]['water_end'] else rooms[room]['water_end']
-    update('tenants', f'{this_month}.{room}.electric_end', elec_end)
-    update('tenants', f'{this_month}.{room}.water_end', water_end)
-    print("done")
+    from dateutil.relativedelta import relativedelta
+    data = query("tenants")
+    last_month = max(data.keys())   
+    new_month = datetime.strftime(datetime.now(), "%Y%m")
     
+    if last_month ==  new_month:
+        print(new_month, "exists")
+        return
+    data[new_month] = copy.deepcopy(data[last_month])
+    
+    for room, info in data[new_month].items():
+        info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
+        info["end_date"] = datetime.strftime(datetime.strptime(info["end_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["end_date"] is not None else None
+        info["due_date"]   = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
+        info["electric_start"] = info["electric_end"]  
+        info["electric_end"]   = None  
+        info["electric_fee"]   = None
+        info["water_start"]    = info["water_end"]  
+        info["water_end"] = None  
+        info["water_fee"] = None
+        info["bill"]      = None
+        info["payment"]      = None
+        info["payment_date"] = None
+        info["due_amount"]   = None
+    from google.colab import drive
+    safe_mount_drive()
+    import json
+    import sqlite3
+    conn = sqlite3.connect(db_file)
+    sql = """
+        UPDATE tenants
+        SET data = json_set(data, '$.' || ?, json(?))
+        WHERE id = ?
+    """
+    conn.execute(sql, (new_month, json.dumps(data[new_month]), 1))
+    conn.commit()
+    conn.close()
+    print(new_month, "initialized. Reset any room?")
     
