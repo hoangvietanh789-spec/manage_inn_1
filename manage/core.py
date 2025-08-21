@@ -254,6 +254,11 @@ def pay():
     elif rooms[room]['status'] != 'rented':
         print("Room not rented yet")
         return
+    if rooms[room]['payment'] != 0:
+        message = f"{room} already paid: {rooms[room]['payment']}. [y] to continue: "
+        ask = input(message)
+    if ask.upper() != "Y":
+        return
     payment = int(input("Payment: "))
     update('tenants', f'{this_month}.{room}.payment', payment)
     update('tenants', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
