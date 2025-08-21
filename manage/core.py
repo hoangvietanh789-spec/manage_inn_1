@@ -259,8 +259,8 @@ def pay():
     if paid != 0:
         message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
         ask = input(message)
-    if ask.upper() != "Y":
-        return
+        if ask.upper() != "Y":
+            return
     payment = paid + int(input("Payment: ")) 
     update('tenants', f'{this_month}.{room}.payment', payment)
     update('tenants', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
