@@ -264,7 +264,7 @@ def pay():
     payment = paid + int(input("Payment: ")) 
     update('tenants', f'{this_month}.{room}.payment', payment)
     update('tenants', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
-    print(f"{room} marked paid {payment} at {datetime.strftime(today, "%d/%m/%Y")}")
+    print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
     run(1) # (1) to avoid asking month
 
 def add_room(room_data, record_id=1):
