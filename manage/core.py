@@ -282,7 +282,6 @@ def add_room(room_data, record_id=1):
         print(room_name, 'not in ["R1", "R2", "R3", "R4", "R5", "R11", "R22", "R33", "R44", "R55"]')
         return
     
-    from google.colab import drive
     safe_mount_drive()
     conn = sqlite3.connect(db_file)
     sql = f"""
@@ -308,20 +307,20 @@ def new_month():
     data[new_month] = copy.deepcopy(data[last_month])
     
     for room, info in data[new_month].items():
-        info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
-        info["end_date"] = datetime.strftime(datetime.strptime(info["end_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["end_date"] is not None else None
-        info["due_date"]   = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
-        info["electric_start"] = info["electric_end"]  
-        info["electric_end"]   = None  
-        info["electric_fee"]   = None
-        info["water_start"]    = info["water_end"]  
-        info["water_end"] = None  
-        info["water_fee"] = None
-        info["bill"]      = None
-        info["payment"]      = None if info['bill'] is None and info['payment'] is None else info['payment'] - info['bill']
-        info["payment_date"] = None if info["payment"] is None else info["payment_date"]
-        info["due_amount"]   = None
-    from google.colab import drive
+        if room in ["R1", "R2", "R3", "R4", "R5"]:
+            info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
+            info["end_date"] = datetime.strftime(datetime.strptime(info["end_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["end_date"] is not None else None
+            info["due_date"]   = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
+            info["electric_start"] = info["electric_end"]  
+            info["electric_end"]   = None  
+            info["electric_fee"]   = None
+            info["water_start"]    = info["water_end"]  
+            info["water_end"] = None  
+            info["water_fee"] = None
+            info["bill"]      = None
+            info["payment"]      = None if info['bill'] is None and info['payment'] is None else info['payment'] - info['bill']
+            info["payment_date"] = None if info["payment"] is None else info["payment_date"]
+            info["due_amount"]   = None
     safe_mount_drive()
     import json
     import sqlite3
@@ -332,6 +331,47 @@ def new_month():
         WHERE id = ?
     """
     conn.execute(sql, (new_month, json.dumps(data[new_month]), 1))
+    conn.commit()
+    conn.close()
+    print(new_month, "initialized. Reset any room: ")
+    room_reset = input()
+    if room_reset == '':
+        return
+    if room_reset not in ["R1", "R2", "R3", "R4", "R5"]:
+        print(room_reset, 'not in ["R1", "R2", "R3", "R4", "R5"]')
+        return
+    reset_room(room_reset) 
+    
+def reset_room(*room_reset):
+    if len(room_reset) == 0:
+        room = input("Room to reset: ").upper()
+    else: 
+        room = room_reset[0]
+    if room not in ["R1", "R2", "R3", "R4", "R5", "R11", "R22", "R33", "R44", "R55"]:
+        print(room, 'not in ["R1", "R2", "R3", "R4", "R5", "R11", "R22", "R33", "R44", "R55"]')
+        return
+    from datetime import datetime
+    this_month = datetime.strftime(datetime.now(), "%Y%m")
+    data = query("tenants")[this_month][room]
+    for info in data:
+        if info == 'status':
+            data[info] = 'available'
+        elif info == 'electric_start':
+            data[info] = data[info] if data['electric_end'] is None else data['electric_end']
+        elif info == 'water_start':
+            data[info] = data[info] if data['water_end'] is None else data['water_end']
+        else:
+            data[info] = None
+    safe_mount_drive()
+    import sqlite3
+    import json
+    conn = sqlite3.connect(db_file)
+    sql = f"""
+        UPDATE tenants
+        SET data = json_set(data, '$.{this_month}.{room}', json(?))
+        WHERE id = ?
+    """
+    conn.execute(sql, (json.dumps(data), 1))
     conn.commit()
     conn.close()
     print(new_month, "initialized. Reset any room?")
