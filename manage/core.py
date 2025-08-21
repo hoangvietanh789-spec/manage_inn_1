@@ -98,6 +98,7 @@ def run(*month_input):
                 "payment": info["payment"],
                 "due_amount": info["due_amount"],
                 "status": info["status"],
+                # 👉 Thêm cột link Zalo
                 "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else ""
             })
 
@@ -141,7 +142,7 @@ def run(*month_input):
     with open(file_price, "w", encoding="utf-8") as f:
         json.dump(price, f, ensure_ascii=False, indent=4)
 
-    print("✅ Created rent_report.xlsx, rent_data_updated.json")
+    print("✅ Đã tạo rent_report.csv và rent_data_updated.json kèm cột Zalo link")
 
 def view():
     from IPython.display import HTML
@@ -254,12 +255,13 @@ def pay():
     elif rooms[room]['status'] != 'rented':
         print("Room not rented yet")
         return
-    if rooms[room]['payment'] != 0:
-        message = f"{room} already paid: {rooms[room]['payment']:,.0f}\n[y] to continue: "
+    paid = rooms[room]['payment']
+    if paid != 0:
+        message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
         ask = input(message)
     if ask.upper() != "Y":
         return
-    payment = int(input("Payment: "))
+    payment = paid + int(input("Payment: ")) 
     update('tenants', f'{this_month}.{room}.payment', payment)
     update('tenants', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment} at {datetime.strftime(today, "%d/%m/%Y")}")
@@ -316,8 +318,8 @@ def new_month():
         info["water_end"] = None  
         info["water_fee"] = None
         info["bill"]      = None
-        info["payment"]      = None
-        info["payment_date"] = None
+        info["payment"]      = None if info['bill'] is None and info['payment'] is None else info['payment'] - info['bill']
+        info["payment_date"] = None if info["payment"] is None else info["payment_date"]
         info["due_amount"]   = None
     from google.colab import drive
     safe_mount_drive()
