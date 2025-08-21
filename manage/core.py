@@ -255,7 +255,7 @@ def pay():
         print("Room not rented yet")
         return
     if rooms[room]['payment'] != 0:
-        message = f"{room} already paid: {rooms[room]['payment']:,.0f}. [y] to continue: "
+        message = f"{room} already paid: {rooms[room]['payment']:,.0f}\n[y] to continue: "
         ask = input(message)
     if ask.upper() != "Y":
         return
