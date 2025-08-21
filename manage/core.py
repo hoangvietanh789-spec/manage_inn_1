@@ -98,7 +98,6 @@ def run(*month_input):
                 "payment": info["payment"],
                 "due_amount": info["due_amount"],
                 "status": info["status"],
-                # 👉 Thêm cột link Zalo
                 "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else ""
             })
 
@@ -142,7 +141,7 @@ def run(*month_input):
     with open(file_price, "w", encoding="utf-8") as f:
         json.dump(price, f, ensure_ascii=False, indent=4)
 
-    print("✅ Đã tạo rent_report.csv và rent_data_updated.json kèm cột Zalo link")
+    print("✅ Created rent_report.xlsx, rent_data_updated.json")
 
 def view():
     from IPython.display import HTML
