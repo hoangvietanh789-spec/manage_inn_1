@@ -334,7 +334,7 @@ def new_month():
     conn.commit()
     conn.close()
     print(new_month, "initialized. Reset any room: ")
-    room_reset = input()
+    room_reset = input().upper()
     if room_reset == '':
         return
     if room_reset not in ["R1", "R2", "R3", "R4", "R5"]:
@@ -374,5 +374,5 @@ def reset_room(*room_reset):
     conn.execute(sql, (json.dumps(data), 1))
     conn.commit()
     conn.close()
-    print(new_month, "initialized. Reset any room?")
+    print(room, "already reset")
     
