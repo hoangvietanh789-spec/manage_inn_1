@@ -1,9 +1,12 @@
 db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
 file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
 file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
+file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
 file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"   
 
-
+# =============================================================================
+# mount drive folder
+# =============================================================================
 def safe_mount_drive(mount_point="/content/drive"):
     import os
     import io
@@ -13,6 +16,10 @@ def safe_mount_drive(mount_point="/content/drive"):
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
             drive.mount(mount_point)
+            
+# =============================================================================
+# calculate and gen report file
+# =============================================================================
 def run(*month_input):
     import json
     import pandas as pd
@@ -21,7 +28,6 @@ def run(*month_input):
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
 
-    from google.colab import drive
     safe_mount_drive()
 
     price = query('prices')
@@ -141,9 +147,14 @@ def run(*month_input):
         json.dump(data, f, ensure_ascii=False, indent=4)
     with open(file_price, "w", encoding="utf-8") as f:
         json.dump(price, f, ensure_ascii=False, indent=4)
+    # with open(file_tenant, "w", encoding="utf-8") as f:
+    #     json.dump(tenant, f, ensure_ascii=False, indent=4)
 
     print("✅ created rent_report.xlsx,room.json,price.json")
 
+# =============================================================================
+# gen link webpage
+# =============================================================================
 def view():
     from IPython.display import HTML
     url = "https://sites.google.com/view/trosupham2vietxocodien"
@@ -152,7 +163,6 @@ def view():
 def query(table):
     import sqlite3
     import json
-    from google.colab import drive
     safe_mount_drive()
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
@@ -160,7 +170,7 @@ def query(table):
         cursor.execute(f"SELECT * FROM {table} WHERE id = 1")
         x = json.loads(cursor.fetchone()[1])
     except Exception as ex:
-        file_roomprint(ex)
+        print(ex)
     finally:
         conn.close()
     return(x)
@@ -170,7 +180,6 @@ def query(table):
 # =============================================================================
 def update(table, object_address, value_update):
     import sqlite3
-    from google.colab import drive
     safe_mount_drive()
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
@@ -186,7 +195,10 @@ def update(table, object_address, value_update):
         print(ex)
     finally:
         conn.close()
-    
+
+# =============================================================================
+# creating db file by import direct from json: price, room, tenant
+# =============================================================================
 def import_json():
     import json
     import sqlite3
@@ -194,9 +206,11 @@ def import_json():
     safe_mount_drive()
     with open(file_price) as file:
         price = json.loads(file.read())
-
     with open(file_room, "r") as f:
+            room = json.loads(f.read())
+    with open(file_tenant, "r") as f:
             tenant = json.loads(f.read())
+
     conn = sqlite3.connect("/content/drive/MyDrive/Dau_tu/data/inn.db")
     cursor = conn.cursor()
 
@@ -206,7 +220,7 @@ def import_json():
         data JSON
     )
     """)
-    cursor.execute("INSERT INTO rooms (data) VALUES (?)", (json.dumps(tenant),))
+    cursor.execute("INSERT INTO rooms (data) VALUES (?)", (json.dumps(room),))
     conn.commit()
 
     cursor.execute("""
@@ -217,8 +231,20 @@ def import_json():
     """)
     cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(price),))
     conn.commit()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS tenants (
+        id INTEGER PRIMARY KEY,
+        data JSON
+    )
+    """)
+    cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(tenant),))
+    conn.commit()
     conn.close()
 
+# =============================================================================
+# insert water and electricity consumed
+# =============================================================================
 def dien_nuoc():
     from datetime import datetime
     today = datetime.now()
@@ -240,7 +266,10 @@ def dien_nuoc():
     update('rooms', f'{this_month}.{room}.electric_end', elec_end)
     update('rooms', f'{this_month}.{room}.water_end', water_end)
     print("done")
-   
+
+# =============================================================================
+# insert customer payment
+# =============================================================================
 def pay():
     from datetime import datetime
     today = datetime.now()
@@ -265,6 +294,9 @@ def pay():
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
     run(1) # (1) to avoid asking month
 
+# =============================================================================
+# add new room by insert data clob
+# =============================================================================
 def add_room(room_data, record_id=1):
     import json
     import sqlite3
@@ -290,7 +322,10 @@ def add_room(room_data, record_id=1):
     conn.execute(sql, (json.dumps(room_data), record_id))
     conn.commit()
     conn.close()
-    
+
+# =============================================================================
+# create inform every new month from previous one    
+# =============================================================================
 def new_month():
     import copy
     from datetime import datetime
@@ -340,6 +375,9 @@ def new_month():
         return
     reset_room(room_reset) 
     
+# =============================================================================
+# reset info of room for fresh
+# =============================================================================
 def reset_room(*room_reset):
     if len(room_reset) == 0:
         room = input("Room to reset: ").upper()
@@ -373,4 +411,3 @@ def reset_room(*room_reset):
     conn.commit()
     conn.close()
     print(room, "already reset")
-    
