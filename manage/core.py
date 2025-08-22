@@ -144,10 +144,10 @@ def run(*month_input):
     # Cột cuối zalo_link thành hyperlink
     phone_col = 3
     for row in range(2, ws.max_row + 1):
-        url = ws.cell(row=row, column=phone_col).value
+        phone = ws.cell(row=row, column=phone_col).value
         if url:
-            ws.cell(row=row, column=phone_col).value = url
-            ws.cell(row=row, column=phone_col).hyperlink = f"tel:{url}"
+            ws.cell(row=row, column=phone_col).value = phone
+            ws.cell(row=row, column=phone_col).hyperlink = f"tel:{phone}"
             ws.cell(row=row, column=phone_col).style = "Hyperlink"
     wb.save(file_report)
     
