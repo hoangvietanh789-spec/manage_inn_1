@@ -142,7 +142,7 @@ def run(*month_input):
             ws.cell(row=row, column=last_col).value = "Zalo Link"   # hoặc giữ nguyên url nếu muốn
             ws.cell(row=row, column=last_col).style = "Hyperlink"
     # Cột cuối zalo_link thành hyperlink
-    phone_col = ws.3
+    phone_col = 3
     for row in range(2, ws.max_row + 1):
         url = ws.cell(row=row, column=phone_col).value
         if url:
