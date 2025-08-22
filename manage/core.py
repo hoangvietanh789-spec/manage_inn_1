@@ -105,7 +105,8 @@ def run(*month_input):
                 "due_amount": info["due_amount"],
                 "status": info["status"],
                 # 👉 Thêm cột link Zalo
-                "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else ""
+                "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else "",
+                "call": f'''href="tel:"{info['phone']}''' if info.get("phone") else ""
             })
 
     df = pd.DataFrame(all_records)
@@ -140,7 +141,14 @@ def run(*month_input):
             ws.cell(row=row, column=last_col).hyperlink = url
             ws.cell(row=row, column=last_col).value = "Zalo Link"   # hoặc giữ nguyên url nếu muốn
             ws.cell(row=row, column=last_col).style = "Hyperlink"
-    # Lưu lại
+    # Cột cuối zalo_link thành hyperlink
+    phone_col = ws.3
+    for row in range(2, ws.max_row + 1):
+        url = ws.cell(row=row, column=phone_col).value
+        if url:
+            call_cell.value = url
+            call_cell.hyperlink = f"tel:{url}"
+            call_cell.style = "Hyperlink"
     wb.save(file_report)
     
     with open(file_room, "w", encoding="utf-8") as f:
