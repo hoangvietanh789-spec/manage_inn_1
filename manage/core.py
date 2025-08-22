@@ -105,8 +105,7 @@ def run(*month_input):
                 "due_amount": info["due_amount"],
                 "status": info["status"],
                 # 👉 Thêm cột link Zalo
-                "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else "",
-                "call": f'''href="tel:"{info['phone']}''' if info.get("phone") else ""
+                "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else ""
             })
 
     df = pd.DataFrame(all_records)
