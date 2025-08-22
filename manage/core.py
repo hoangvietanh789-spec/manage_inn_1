@@ -1,4 +1,8 @@
 db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
+file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
+file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
+file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"   
+
 
 def safe_mount_drive(mount_point="/content/drive"):
     import os
@@ -20,15 +24,11 @@ def run(*month_input):
     from google.colab import drive
     safe_mount_drive()
 
-    file_price = "/content/drive/MyDrive/Dau_tu/data/price.json"
-    file_all = "/content/drive/MyDrive/Dau_tu/data/all.json"
-    file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"
-
     price = query('prices')
     electric_price = price[this_month]['electric_price']
     water_price = price[this_month]['water_price']
 
-    data = query('tenants')
+    data = query('rooms')
     all_records = []
     print(data.keys())
     month_tocal = [this_month] 
@@ -86,7 +86,7 @@ def run(*month_input):
             if month in month_tocal and info['status'] == 'rented':
                 info = calculate(room, info)
                 for fo in ['electric_fee','water_fee','rent_price','payment','bill','due_amount', 'status']:
-                    update('tenants', f'{month}.{room}.{fo}', info[fo])
+                    update('rooms', f'{month}.{room}.{fo}', info[fo])
             all_records.append({
                 "month": month,
                 "room": room,
@@ -137,12 +137,12 @@ def run(*month_input):
     # Lưu lại
     wb.save(file_report)
     
-    with open(file_all, "w", encoding="utf-8") as f:
+    with open(file_room, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     with open(file_price, "w", encoding="utf-8") as f:
         json.dump(price, f, ensure_ascii=False, indent=4)
 
-    print("✅ created rent_report.xlsx,all.json,price.json")
+    print("✅ created rent_report.xlsx,room.json,price.json")
 
 def view():
     from IPython.display import HTML
@@ -160,7 +160,7 @@ def query(table):
         cursor.execute(f"SELECT * FROM {table} WHERE id = 1")
         x = json.loads(cursor.fetchone()[1])
     except Exception as ex:
-        print(ex)
+        file_roomprint(ex)
     finally:
         conn.close()
     return(x)
@@ -192,23 +192,21 @@ def import_json():
     import sqlite3
     from google.colab import drive
     safe_mount_drive()
-    file_all = "/content/drive/MyDrive/Dau_tu/data/all.json"
-    file_price = "/content/drive/MyDrive/Dau_tu/data/price.json"
     with open(file_price) as file:
         price = json.loads(file.read())
 
-    with open(file_all, "r") as f:
+    with open(file_room, "r") as f:
             tenant = json.loads(f.read())
     conn = sqlite3.connect("/content/drive/MyDrive/Dau_tu/data/inn.db")
     cursor = conn.cursor()
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tenants (
+    CREATE TABLE IF NOT EXISTS rooms (
         id INTEGER PRIMARY KEY,
         data JSON
     )
     """)
-    cursor.execute("INSERT INTO tenants (data) VALUES (?)", (json.dumps(tenant),))
+    cursor.execute("INSERT INTO rooms (data) VALUES (?)", (json.dumps(tenant),))
     conn.commit()
 
     cursor.execute("""
@@ -228,7 +226,7 @@ def dien_nuoc():
     mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
     mes_water = f"Công tơ NƯỚC tháng {this_month}: "
     room = input("Room: ").upper()
-    rooms = query('tenants')[this_month]
+    rooms = query('rooms')[this_month]
     if room not in rooms:
         print("Room not valid")
         return
@@ -239,8 +237,8 @@ def dien_nuoc():
     water_end = int(input(mes_water))
     elec_end = elec_end if elec_end > rooms[room]['electric_start'] else rooms[room]['electric_start']
     water_end = water_end if water_end > rooms[room]['water_end'] else rooms[room]['water_end']
-    update('tenants', f'{this_month}.{room}.electric_end', elec_end)
-    update('tenants', f'{this_month}.{room}.water_end', water_end)
+    update('rooms', f'{this_month}.{room}.electric_end', elec_end)
+    update('rooms', f'{this_month}.{room}.water_end', water_end)
     print("done")
    
 def pay():
@@ -248,7 +246,7 @@ def pay():
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
     room = input("Room: ").upper()
-    rooms = query('tenants')[this_month]
+    rooms = query('rooms')[this_month]
     if room not in rooms:
         print("Room not valid")
         return
@@ -262,8 +260,8 @@ def pay():
         if ask.upper() != "Y":
             return
     payment = paid + int(input("Payment: ")) 
-    update('tenants', f'{this_month}.{room}.payment', payment)
-    update('tenants', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
+    update('rooms', f'{this_month}.{room}.payment', payment)
+    update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
     run(1) # (1) to avoid asking month
 
@@ -285,7 +283,7 @@ def add_room(room_data, record_id=1):
     safe_mount_drive()
     conn = sqlite3.connect(db_file)
     sql = f"""
-        UPDATE tenants
+        UPDATE rooms
         SET data = json_set(data, '$.{month}.{room_name}', json(?))
         WHERE id = ?
     """
@@ -297,7 +295,7 @@ def new_month():
     import copy
     from datetime import datetime
     from dateutil.relativedelta import relativedelta
-    data = query("tenants")
+    data = query("rooms")
     last_month = max(data.keys())   
     new_month = datetime.strftime(datetime.now(), "%Y%m")
     
@@ -326,7 +324,7 @@ def new_month():
     import sqlite3
     conn = sqlite3.connect(db_file)
     sql = """
-        UPDATE tenants
+        UPDATE rooms
         SET data = json_set(data, '$.' || ?, json(?))
         WHERE id = ?
     """
@@ -352,7 +350,7 @@ def reset_room(*room_reset):
         return
     from datetime import datetime
     this_month = datetime.strftime(datetime.now(), "%Y%m")
-    data = query("tenants")[this_month][room]
+    data = query("rooms")[this_month][room]
     for info in data:
         if info == 'status':
             data[info] = 'available'
@@ -367,7 +365,7 @@ def reset_room(*room_reset):
     import json
     conn = sqlite3.connect(db_file)
     sql = f"""
-        UPDATE tenants
+        UPDATE rooms
         SET data = json_set(data, '$.{this_month}.{room}', json(?))
         WHERE id = ?
     """
