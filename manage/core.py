@@ -146,9 +146,9 @@ def run(*month_input):
     for row in range(2, ws.max_row + 1):
         url = ws.cell(row=row, column=phone_col).value
         if url:
-            call_cell.value = url
-            call_cell.hyperlink = f"tel:{url}"
-            call_cell.style = "Hyperlink"
+            ws.cell(row=row, column=phone_col).value = url
+            ws.cell(row=row, column=phone_col).hyperlink = f"tel:{url}"
+            ws.cell(row=row, column=phone_col).style = "Hyperlink"
     wb.save(file_report)
     
     with open(file_room, "w", encoding="utf-8") as f:
