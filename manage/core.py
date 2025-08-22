@@ -138,8 +138,14 @@ def run(*month_input):
         url = ws.cell(row=row, column=last_col).value
         if url and str(url).startswith("http"):
             ws.cell(row=row, column=last_col).hyperlink = url
-            ws.cell(row=row, column=last_col).value = "Zalo Link"   # hoặc giữ nguyên url nếu muốn
+            ws.cell(row=row, column=last_col).value = "Zalo Link"
             ws.cell(row=row, column=last_col).style = "Hyperlink"
+            
+        # phone = ws.cell(row=row, column=3).value
+        # if phone:
+        #     ws.cell(row=row, column=3).hyperlink = f"tel:{phone}"
+        #     ws.cell(row=row, column=3).value = f"Gọi:{phone}"   
+        #     ws.cell(row=row, column=3).style = "Hyperlink"
     # Lưu lại
     wb.save(file_report)
     
