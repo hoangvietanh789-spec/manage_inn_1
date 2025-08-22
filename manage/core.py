@@ -232,14 +232,14 @@ def import_json():
     cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(price),))
     conn.commit()
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tenants (
-        id INTEGER PRIMARY KEY,
-        data JSON
-    )
-    """)
-    cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(tenant),))
-    conn.commit()
+    # cursor.execute("""
+    # CREATE TABLE IF NOT EXISTS tenants (
+    #     id INTEGER PRIMARY KEY,
+    #     data JSON
+    # )
+    # """)
+    # cursor.execute("INSERT INTO tenants (data) VALUES (?)", (json.dumps(tenant),))
+    # conn.commit()
     conn.close()
 
 # =============================================================================
@@ -411,3 +411,4 @@ def reset_room(*room_reset):
     conn.commit()
     conn.close()
     print(room, "already reset")
+    
