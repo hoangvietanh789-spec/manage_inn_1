@@ -94,7 +94,17 @@ def run(*month_input):
             if month in month_tocal and info['status'] == 'rented':
                 info = calculate(room, info)
                 for fo in ['electric_fee','water_fee','rent_price','payment','bill','due_amount', 'status']:
-                    update('rooms', f'{month}.{room}.{fo}', info[fo])
+                    update('rooms', f'{month}.{room}.{fo}', info[fo]) #update trước rồi mới convert để gen file như dưới đây
+            info['bill'] = 0 if info['bill'] == None else info['bill']
+            info['rent_price'] = 0 if info['rent_price'] == None else info['rent_price']
+            info['electric_fee'] = 0 if info['electric_fee'] == None else info['electric_fee']
+            info['electric_end'] = 0 if info['electric_end'] == None else info['electric_end']
+            info['electric_start'] = 0 if info['electric_start'] == None else info['electric_start']
+            info['water_fee'] = 0 if info['water_fee'] == None else info['water_fee']
+            info['water_end'] = 0 if info['water_end'] == None else info['water_end']
+            info['water_start'] = 0 if info['water_start'] == None else info['water_start']
+            info['payment'] = 0 if info['payment'] == None else info['payment']
+            
             all_records.append({
                 "month": month,
                 "room": room,
@@ -108,10 +118,12 @@ def run(*month_input):
                 "due_amount": info["due_amount"],
                 "status": info["status"],
                 "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else "",
-                "electric_start": info["electric_start"],
-                "electric_end": info["electric_end"],
-                "water_start": info["water_start"],
-                "water_end": info["water_end"],
+                "notify":f"""Tổng: {info["bill"]:,.0f}, trong đó:
+    - Tiền thuê: {info["rent_price"]:,.0f}
+    - Tiền điện: {info["electric_fee"]:,.0f} = ({info["electric_end"]:,.0f} - {info["electric_start"]:,.0f}) * {electric_price:,.0f}đ/kWh
+    - Tiền nước: {info["water_fee"]:,.0f} = ({info["water_end"]:,.0f} - {info["water_start"]:,.0f}) * {water_price:,.0f}đ/m3
+    - Đã thanh toán/trả trước: {info["payment"]:,.0f}
+    - Còn thiếu: {info["bill"] - info["payment"]:,.0f}"""
             })
 
     df = pd.DataFrame(all_records)
@@ -128,31 +140,36 @@ def run(*month_input):
     # Auto-fit độ rộng cột
     for col in ws.columns:
         max_len = 0
+        min_len = 55
         col_letter = get_column_letter(col[0].column)
         for cell in col:
             if cell.value:
                 max_len = max(max_len, len(str(cell.value)))
-        ws.column_dimensions[col_letter].width = max_len + 2
+        ws.column_dimensions[col_letter].width = max_len + 2 if max_len < min_len else min_len # để cột cuối ko bị quá dài
     # Định dạng tất cả cột số thành có phân cách hàng nghìn
     for col in ws.iter_cols(min_row=2, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
         for cell in col:
             if isinstance(cell.value, (int, float)):
                 cell.number_format = "#,##0"
-    # Cột cuối zalo_link thành hyperlink
-    last_col = ws.max_column
+
+    zalo_col = None
+    name_col = None
+    room_col = None
+    for col in range(1, ws.max_column + 1):
+        if ws.cell(row=1, column=col).value == "zalo_link":
+            zalo_col = col
+        elif ws.cell(row=1, column=col).value == "name":
+            name_col = col
+        elif ws.cell(row=1, column=col).value == "room":
+            room_col = col
     for row in range(2, ws.max_row + 1):
-        url = ws.cell(row=row, column=last_col).value
+        url = ws.cell(row=row, column=zalo_col).value
+        name = ws.cell(row=row, column=name_col).value
+        room = ws.cell(row=row, column=room_col).value
         if url and str(url).startswith("http"):
-            ws.cell(row=row, column=last_col).hyperlink = url
-            ws.cell(row=row, column=last_col).value = "Zalo Link"
-            ws.cell(row=row, column=last_col).style = "Hyperlink"
-            
-        # phone = ws.cell(row=row, column=3).value
-        # if phone:
-        #     ws.cell(row=row, column=3).hyperlink = f"tel:{phone}"
-        #     ws.cell(row=row, column=3).value = f"Gọi:{phone}"   
-        #     ws.cell(row=row, column=3).style = "Hyperlink"
-    # Lưu lại
+            ws.cell(row=row, column=zalo_col).hyperlink = url
+            ws.cell(row=row, column=zalo_col).value = f"Zalo {room} {name}"
+            ws.cell(row=row, column=zalo_col).style = "Hyperlink"
     wb.save(file_report)
     
     with open(file_room, "w", encoding="utf-8") as f:
@@ -335,6 +352,37 @@ def add_room(room_data):
     conn.execute(sql, (json.dumps(room_data), 1))
     conn.commit()
     conn.close()
+    
+# =============================================================================
+# add new room by insert data clob
+# =============================================================================
+def add_tenant(tenant_data):
+    import json
+    import sqlite3
+    tenants = query('tenants')
+    if tenant_data['phone'] != tenant_data['zalo']:
+        key = input("chose phone or zalo because diff: 1/2")
+        if key not in ['1', '2']:
+            print("bad option")
+            return
+        key = tenant_data['phone'] if key == '1' else tenant_data['zalo']
+    else:
+        key = tenant_data['phone']
+    if key in tenants:
+        print(f"{key} already in tenants")
+        return
+    safe_mount_drive()
+    conn = sqlite3.connect(db_file)
+    sql = f"""
+        UPDATE tenants
+        SET data = json_set(data, '$.active.{key}', json(?))
+        WHERE id = ?
+    """
+    conn.execute(sql, (json.dumps(tenant_data), 1))
+    conn.commit()
+    conn.close()
+    print(key, 'added')
+    print(query('tenants')[key])
 
 # =============================================================================
 # create inform every new month from previous one    
