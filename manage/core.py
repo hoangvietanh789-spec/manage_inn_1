@@ -429,17 +429,23 @@ def automap_tenant():
     rooms = query("rooms")[this_month]
     tenants = query("tenants")['active']
     for r in rooms:
-        room = rooms[r]
+        num = 0
         for t in tenants:
             tenant = tenants[t]
             tenant_start = datetime.strftime(datetime.strptime(tenant['start_date'], '%d/%m/%Y'), "%Y%m")
-            if tenant['room'] == room and tenant['main'] == 1 and tenant_start <= this_month:
-                rooms[room]['rent_price'] = tenant['rent_price']
-                rooms[room]['deposit'] = tenant['deposit']
-                rooms[room]['phone'] = tenant['phone']
-                rooms[room]['zalo'] = tenant['zalo']
-            if tenant['room'] == room:
-                rooms[room]['num'] += 1
+            if tenant['room'] == r and tenant['main'] == 1 and tenant_start <= this_month:
+                update('rooms', f'{this_month}.{r}.rent_price', tenant['rent_price'])
+                update('rooms', f'{this_month}.{r}.deposit', tenant['deposit'])
+                update('rooms', f'{this_month}.{r}.phone', tenant['phone'])
+                update('rooms', f'{this_month}.{r}.zalo', tenant['zalo'])
+                update('rooms', f'{this_month}.{r}.name', tenant['name'])
+            else: 
+                print(f"check room: {tenant['room']} == {r}: {tenant['room'] == r}")
+                print(f"check main: {tenant['main']} == 1: {tenant['main'] == 1}")
+                print(f"check month: {tenant_start} <= {this_month}: {tenant_start <= this_month}")
+            if tenant['room'] == r:
+                num += 1
+                update('rooms', f'{this_month}.{r}.num', num)
                 
 # =============================================================================
 # manual map tenant info to room                
@@ -449,27 +455,31 @@ def manualmap_tenant():
     this_month = datetime.strftime(datetime.now(), "%Y%m")
     rooms = query("rooms")[this_month]
     tenants = query("tenants")['active']
-    print(tenants)
-    tenant = input("tenant: ")
-    if tenant not in tenants:
-        print(tenant, "not in tenants")
+    print(tenants.keys())
+    t = input("tenant: ")
+    if t not in tenants:
+        print(t, "not in tenants")
         return
-    print(rooms)
-    tenant = tenants[tenant]
-    room = input("room: ").upper()
-    if room not in rooms:
-        print(room, "not in rooms")
+    tenant = tenants[t]
+    print(rooms.keys())
+    r = input("room: ").upper()
+    if r not in rooms:
+        print(r, "not in rooms")
         return
-    room = rooms[room]
+    num = 0
     tenant_start = datetime.strftime(datetime.strptime(tenant['start_date'], '%d/%m/%Y'), "%Y%m")
-    if tenant['room'] == room and tenant['main'] == 1 and tenant_start <= this_month:
-        rooms[room]['rent_price'] = tenant['rent_price']
-        rooms[room]['deposit'] = tenant['deposit']
-        rooms[room]['phone'] = tenant['phone']
-        rooms[room]['zalo'] = tenant['zalo']
-    if tenant['room'] == room:
-        rooms[room]['num'] += 1
-
-                
-                
-                
+    if tenant['room'] == r and tenant['main'] == 1 and tenant_start <= this_month:
+        update('rooms', f'{this_month}.{r}.rent_price', tenant['rent_price'])
+        update('rooms', f'{this_month}.{r}.deposit', tenant['deposit'])
+        update('rooms', f'{this_month}.{r}.phone', tenant['phone'])
+        update('rooms', f'{this_month}.{r}.zalo', tenant['zalo'])
+        update('rooms', f'{this_month}.{r}.name', tenant['name'])
+    else:
+        print(f"check room: {tenant['room']} == {r}: {tenant['room'] == r}")
+        print(f"check main: {tenant['main']} == 1: {tenant['main'] == 1}")
+        print(f"check month: {tenant_start} <= {this_month}: {tenant_start <= this_month}")
+                          
+    if tenant['room'] == r:
+        num+= 1
+        update('rooms', f'{this_month}.{r}.num', num)         
+        
