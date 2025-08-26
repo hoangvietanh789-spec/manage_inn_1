@@ -2,7 +2,8 @@ db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
 file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
 file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
 file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
-file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"   
+file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
+file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 
 # =============================================================================
 # mount drive folder
@@ -125,7 +126,7 @@ def run(*month_input):
     - Đã thanh toán/trả trước: {info["payment"]:,.0f}
     - Còn thiếu: {info["bill"] - info["payment"]:,.0f}"""
             })
-
+            
     df = pd.DataFrame(all_records)
     import pandas as pd
     from openpyxl import load_workbook
@@ -496,6 +497,7 @@ def automap_tenant():
             if tenant['room'] == r and tenant['main'] == 1 and tenant_start <= this_month:
                 update('rooms', f'{this_month}.{r}.rent_price', tenant['rent_price'])
                 update('rooms', f'{this_month}.{r}.deposit', tenant['deposit'])
+                update('rooms', f'{this_month}.{r}.deposit_date', tenant['deposit_date'])
                 update('rooms', f'{this_month}.{r}.phone', tenant['phone'])
                 update('rooms', f'{this_month}.{r}.zalo', tenant['zalo'])
                 update('rooms', f'{this_month}.{r}.name', tenant['name'])
@@ -533,6 +535,7 @@ def manualmap_tenant():
     if tenant['room'] == r and tenant['main'] == 1 and tenant_start <= this_month:
         update('rooms', f'{this_month}.{r}.rent_price', tenant['rent_price'])
         update('rooms', f'{this_month}.{r}.deposit', tenant['deposit'])
+        update('rooms', f'{this_month}.{r}.deposit_date', tenant['deposit_date'])
         update('rooms', f'{this_month}.{r}.phone', tenant['phone'])
         update('rooms', f'{this_month}.{r}.zalo', tenant['zalo'])
         update('rooms', f'{this_month}.{r}.name', tenant['name'])
@@ -580,10 +583,21 @@ def change_tenant_status(**kwargs):
         else:
             active[kwargs['tenant']] = active.get(kwargs['tenant'], deactive[kwargs['tenant']])
             start_date = input("start_date (dd/mm/yyyy): ")
+            room = input("room: ").upper()
+            rent_price = int(input("rent_price: "))
+            mess_deposit = f"deposit / enter = {rent_price}: "
+            deposit = input(mess_deposit)
+            deposit = int(deposit) if deposit != '' else rent_price
+            deposit_date = input("deposit_date (dd/mm/yyyy): ")
             try:
-                x = datetime.strptime(start_date, '%d/%m/%Y')
+                datetime.strptime(start_date, '%d/%m/%Y')
+                datetime.strptime(deposit_date, '%d/%m/%Y')
                 active[kwargs['tenant']]['start_date'] = start_date
                 active[kwargs['tenant']]['end_date'] = None
+                active[kwargs['tenant']]['rent_price'] = rent_price
+                active[kwargs['tenant']]['deposit'] = deposit
+                active[kwargs['tenant']]['deposit_date'] = deposit_date
+                active[kwargs['tenant']]['room'] = room
             except Exception as ex:
                 print(ex)
                 return
@@ -599,7 +613,7 @@ def change_tenant_status(**kwargs):
             deactive[kwargs['tenant']] = deactive.get(kwargs['tenant'], active[kwargs['tenant']])
             end_date = input("end_date (dd/mm/yyyy): ")
             try:
-                x = datetime.strptime(end_date, '%d/%m/%Y')
+                datetime.strptime(end_date, '%d/%m/%Y')
                 deactive[kwargs['tenant']]['end_date'] = end_date
             except Exception as ex:
                 print(ex)
