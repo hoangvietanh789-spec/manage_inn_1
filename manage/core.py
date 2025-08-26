@@ -428,8 +428,10 @@ def automap_tenant():
     this_month = datetime.strftime(datetime.now(), "%Y%m")
     rooms = query("rooms")[this_month]
     tenants = query("tenants")['active']
-    for room in rooms:
-        for tenant in tenants:
+    for r in rooms:
+        room = rooms[r]
+        for t in tenants:
+            tenant = tenants[t]
             tenant_start = datetime.strftime(datetime.strptime(tenant['start_date'], '%d/%m/%Y'), "%Y%m")
             if tenant['room'] == room and tenant['main'] == 1 and tenant_start <= this_month:
                 rooms[room]['rent_price'] = tenant['rent_price']
