@@ -30,6 +30,8 @@ def run(*month_input):
 
     safe_mount_drive()
 
+    tenant = query('tenants')    
+
     price = query('prices')
     electric_price = price[this_month]['electric_price']
     water_price = price[this_month]['water_price']
@@ -97,6 +99,7 @@ def run(*month_input):
                 "month": month,
                 "room": room,
                 "tenant": info["phone"],
+                "name": info["name"],
                 "rent_price": info["rent_price"],
                 "electric_fee": info["electric_fee"],
                 "water_fee": info["water_fee"],
@@ -104,8 +107,11 @@ def run(*month_input):
                 "payment": info["payment"],
                 "due_amount": info["due_amount"],
                 "status": info["status"],
-                # 👉 Thêm cột link Zalo
-                "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else ""
+                "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else "",
+                "electric_start": info["electric_start"],
+                "electric_end": info["electric_end"],
+                "water_start": info["water_start"],
+                "water_end": info["water_end"],
             })
 
     df = pd.DataFrame(all_records)
@@ -153,8 +159,8 @@ def run(*month_input):
         json.dump(data, f, ensure_ascii=False, indent=4)
     with open(file_price, "w", encoding="utf-8") as f:
         json.dump(price, f, ensure_ascii=False, indent=4)
-    # with open(file_tenant, "w", encoding="utf-8") as f:
-    #     json.dump(tenant, f, ensure_ascii=False, indent=4)
+    with open(file_tenant, "w", encoding="utf-8") as f:
+        json.dump(tenant, f, ensure_ascii=False, indent=4)
 
     print("✅ created rent_report.xlsx,room.json,price.json")
 
@@ -372,6 +378,7 @@ def new_month():
     conn.execute(sql, (new_month, json.dumps(data[new_month]), 1))
     conn.commit()
     conn.close()
+    automap_tenant() # tự động rà soát cập nhật lại thông tin người thuê, chỉ lấy thông tin người thuê đang active. lấy đúng room người thuê
     print(new_month, "initialized. Reset any room: ")
     room_reset = input().upper()
     if room_reset == '':
@@ -379,7 +386,7 @@ def new_month():
     if room_reset not in ["R1", "R2", "R3", "R4", "R5"]:
         print(room_reset, 'not in ["R1", "R2", "R3", "R4", "R5"]')
         return
-    reset_room(room_reset) 
+    reset_room(room_reset)
     
 # =============================================================================
 # reset info of room for fresh
@@ -421,7 +428,7 @@ def reset_room(*room_reset):
     print(room, "already reset")
     
 # =============================================================================
-# automatically map tenants info to rooms
+# automatically map tenants info to rooms, only this month
 # =============================================================================
 def automap_tenant():
     from datetime import datetime
@@ -448,7 +455,7 @@ def automap_tenant():
                 update('rooms', f'{this_month}.{r}.num', num)
                 
 # =============================================================================
-# manual map tenant info to room                
+# manual map tenant info to room, only this month               
 # =============================================================================
 def manualmap_tenant():
     from datetime import datetime
@@ -483,3 +490,66 @@ def manualmap_tenant():
         num+= 1
         update('rooms', f'{this_month}.{r}.num', num)         
         
+# =============================================================================
+# change tenant status: tenant = "sdt", status = "active/deactive" 
+# =============================================================================
+def change_tenant_status(**kwargs):
+    from datetime import datetime
+    def status_tenant(new_data):
+        import sqlite3
+        import json
+        safe_mount_drive()
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+        cursor.execute("""
+                       UPDATE tenants
+                       SET data = ?
+                       WHERE id = 1
+                       """, (json.dumps(new_data),))
+        conn.commit()
+        print("updated")
+        conn.close()
+    tenants = query("tenants")
+    active = tenants['active']
+    deactive = tenants['deactive']
+    if kwargs['tenant'] not in active and kwargs['tenant'] not in deactive:
+        print(kwargs['tenant'], "not exists")
+        return
+    if kwargs['status'] == 'active':
+        if kwargs['tenant'] in active:
+            print('already active')
+            return
+        else:
+            active[kwargs['tenant']] = active.get(kwargs['tenant'], deactive[kwargs['tenant']])
+            start_date = input("start_date (dd/mm/yyyy): ")
+            try:
+                x = datetime.strptime(start_date, '%d/%m/%Y')
+                active[kwargs['tenant']]['start_date'] = start_date
+                active[kwargs['tenant']]['end_date'] = None
+            except Exception as ex:
+                print(ex)
+                return
+            deactive.pop(kwargs['tenant'])
+            tenants['active'],tenants['deactive'] =  active, deactive
+            status_tenant(tenants)
+            print('activated')
+    elif kwargs['status'] == 'deactive':
+        if kwargs['tenant'] in deactive:
+            print('already deactive')
+            return
+        else:
+            deactive[kwargs['tenant']] = deactive.get(kwargs['tenant'], active[kwargs['tenant']])
+            end_date = input("end_date (dd/mm/yyyy): ")
+            try:
+                x = datetime.strptime(end_date, '%d/%m/%Y')
+                deactive[kwargs['tenant']]['start_date'] = None
+                deactive[kwargs['tenant']]['end_date'] = end_date
+            except Exception as ex:
+                print(ex)
+                return
+            active.pop(kwargs['tenant'])
+            tenants['active'],tenants['deactive'] =  active, deactive
+            status_tenant(tenants)
+            print('deactivated')
+    else:
+        print("wrong status")
