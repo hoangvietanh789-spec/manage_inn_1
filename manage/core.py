@@ -133,7 +133,7 @@ def run(*month_input):
     
     # Xuất dữ liệu ra Excel bằng pandas + openpyxl
     df = pd.DataFrame(all_records)
-    df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] not in [0,'0'] else '', axis = 1)
+    df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] not in [0,'0'] else '', axis = 1) # bỏ nội dung thông báo ở các dòng đã thanh toán hết
     df.to_excel(file_report, index=False, sheet_name="Report", engine="openpyxl")
     # Mở lại file bằng openpyxl để chỉnh sửa
     wb = load_workbook(file_report)
