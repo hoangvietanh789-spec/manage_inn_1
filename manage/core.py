@@ -238,14 +238,14 @@ def import_json():
     cursor.execute("INSERT INTO prices (data) VALUES (?)", (json.dumps(price),))
     conn.commit()
 
-    # cursor.execute("""
-    # CREATE TABLE IF NOT EXISTS tenants (
-    #     id INTEGER PRIMARY KEY,
-    #     data JSON
-    # )
-    # """)
-    # cursor.execute("INSERT INTO tenants (data) VALUES (?)", (json.dumps(tenant),))
-    # conn.commit()
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS tenants (
+        id INTEGER PRIMARY KEY,
+        data JSON
+    )
+    """)
+    cursor.execute("INSERT INTO tenants (data) VALUES (?)", (json.dumps(tenant),))
+    conn.commit()
     conn.close()
 
 # =============================================================================
@@ -303,7 +303,7 @@ def pay():
 # =============================================================================
 # add new room by insert data clob
 # =============================================================================
-def add_room(room_data, record_id=1):
+def add_room(room_data):
     import json
     import sqlite3
     from datetime import datetime
@@ -325,7 +325,7 @@ def add_room(room_data, record_id=1):
         SET data = json_set(data, '$.{month}.{room_name}', json(?))
         WHERE id = ?
     """
-    conn.execute(sql, (json.dumps(room_data), record_id))
+    conn.execute(sql, (json.dumps(room_data), 1))
     conn.commit()
     conn.close()
 
@@ -402,6 +402,8 @@ def reset_room(*room_reset):
             data[info] = data[info] if data['electric_end'] is None else data['electric_end']
         elif info == 'water_start':
             data[info] = data[info] if data['water_end'] is None else data['water_end']
+        elif info == 'num':
+            data[info] = 0
         else:
             data[info] = None
     safe_mount_drive()
@@ -418,3 +420,54 @@ def reset_room(*room_reset):
     conn.close()
     print(room, "already reset")
     
+# =============================================================================
+# automatically map tenants info to rooms
+# =============================================================================
+def automap_tenant():
+    from datetime import datetime
+    this_month = datetime.strftime(datetime.now(), "%Y%m")
+    rooms = query("rooms")[this_month]
+    tenants = query("tenants")['active']
+    for room in rooms:
+        for tenant in tenants:
+            tenant_start = datetime.strftime(datetime.strptime(tenant['start_date'], '%d/%m/%Y'), "%Y%m")
+            if tenant['room'] == room and tenant['main'] == 1 and tenant_start <= this_month:
+                rooms[room]['rent_price'] = tenant['rent_price']
+                rooms[room]['deposit'] = tenant['deposit']
+                rooms[room]['phone'] = tenant['phone']
+                rooms[room]['zalo'] = tenant['zalo']
+            if tenant['room'] == room:
+                rooms[room]['num'] += 1
+                
+# =============================================================================
+# manual map tenant info to room                
+# =============================================================================
+def manualmap_tenant():
+    from datetime import datetime
+    this_month = datetime.strftime(datetime.now(), "%Y%m")
+    rooms = query("rooms")[this_month]
+    tenants = query("tenants")['active']
+    print(tenants)
+    tenant = input("tenant: ")
+    if tenant not in tenants:
+        print(tenant, "not in tenants")
+        return
+    print(rooms)
+    tenant = tenants[tenant]
+    room = input("room: ").upper()
+    if room not in rooms:
+        print(room, "not in rooms")
+        return
+    room = rooms[room]
+    tenant_start = datetime.strftime(datetime.strptime(tenant['start_date'], '%d/%m/%Y'), "%Y%m")
+    if tenant['room'] == room and tenant['main'] == 1 and tenant_start <= this_month:
+        rooms[room]['rent_price'] = tenant['rent_price']
+        rooms[room]['deposit'] = tenant['deposit']
+        rooms[room]['phone'] = tenant['phone']
+        rooms[room]['zalo'] = tenant['zalo']
+    if tenant['room'] == room:
+        rooms[room]['num'] += 1
+
+                
+                
+                
