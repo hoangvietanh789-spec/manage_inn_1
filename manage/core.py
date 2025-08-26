@@ -128,6 +128,7 @@ def run(*month_input):
             })
             
     df = pd.DataFrame(all_records)
+    df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] !=0 else '', axis = 1)
     import pandas as pd
     from openpyxl import load_workbook
     from openpyxl.utils import get_column_letter
