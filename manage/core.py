@@ -189,6 +189,7 @@ def query(table):
 
 # =============================================================================
 # ('prices', '202507.R3.electric_price', 3000/"abc")
+# - cập nhật thông tin các bảng theo đường dẫn
 # =============================================================================
 def update(table, object_address, value_update):
     import sqlite3
@@ -429,6 +430,10 @@ def reset_room(*room_reset):
     
 # =============================================================================
 # automatically map tenants info to rooms, only this month
+# Tự động cập nhật, chỉ áp dụng cho tháng này
+# Kiểm tra đối chiếu ngày bắt đầu thuê của từng tenant
+# Tự động đếm và cập nhật thông tin số người thuê cho từng phòng
+# Chỉ lấy thông tin của người thuê là main hoặc người thuê là main cuối cùng nếu cả 2 cùng là main
 # =============================================================================
 def automap_tenant():
     from datetime import datetime
@@ -455,7 +460,9 @@ def automap_tenant():
                 update('rooms', f'{this_month}.{r}.num', num)
                 
 # =============================================================================
-# manual map tenant info to room, only this month               
+# manual map tenant info to room, only this month           
+# cập nhật thông tin người thuê vào phòng bằng cạch chọn người thuê và phòng cần cập nhật
+# Người thuê chỉ được cập nhật vào đúng phòng thuê đã khai báo trong tenant và main phải =1  
 # =============================================================================
 def manualmap_tenant():
     from datetime import datetime
@@ -492,6 +499,9 @@ def manualmap_tenant():
         
 # =============================================================================
 # change tenant status: tenant = "sdt", status = "active/deactive" 
+# - cập nhật theo input
+# - nếu là active thì tự động xóa ngày end_date là ngày chấm dứt thuê, cập nhật ngày start_date là ngày thuê theo input
+# - nếu là deactive thì tự động cập nhật ngày end_date là ngày chấm dứt thuê, ngày start_date giữ nguyên
 # =============================================================================
 def change_tenant_status(**kwargs):
     from datetime import datetime
@@ -542,7 +552,6 @@ def change_tenant_status(**kwargs):
             end_date = input("end_date (dd/mm/yyyy): ")
             try:
                 x = datetime.strptime(end_date, '%d/%m/%Y')
-                deactive[kwargs['tenant']]['start_date'] = None
                 deactive[kwargs['tenant']]['end_date'] = end_date
             except Exception as ex:
                 print(ex)
