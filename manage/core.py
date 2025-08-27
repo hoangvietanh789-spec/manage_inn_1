@@ -31,7 +31,7 @@ def run(*month_input):
 
     safe_mount_drive()
     tong_diennuoc = querydf('tong_diennuoc')
-    if this_month not in tong_diennuoc['Month']:
+    if this_month not in list(tong_diennuoc['Month']):
         print("Chưa có hóa đơn tổng điện nước tháng này")
         return
 
