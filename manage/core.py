@@ -759,6 +759,7 @@ def doanhthu():
 # conn.close()
 
 def save_utility(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
+    import sqlite3
     from datetime import datetime
 
     today = datetime.now()
