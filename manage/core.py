@@ -224,6 +224,7 @@ def query(table):
     return(x)
 
 def querydf(table):
+    import pandas as pd
     import sqlite3
     conn = sqlite3.connect(db_file)
     df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
