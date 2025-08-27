@@ -72,15 +72,23 @@ def run(*month_input):
 
         rent_price = info["rent_price"] or 0
         payment = info["payment"] or 0
+        prepayment = info['prepayment'] or 0
 
         bill = rent_price + electric_fee + water_fee
-        due_amount = bill - payment if  bill - payment > 0 else 0
+        if bill <= prepayment:
+            bill = 0
+            prepayment = prepayment - bill
+            due_amount = 0
+        elif bill > prepayment:
+            bill = due_amount = bill - prepayment
+            prepayment = 0
 
         # Cập nhật vào dict
         info["electric_fee"] = electric_fee
         info["water_fee"] = water_fee
         info["bill"] = bill
         info["due_amount"] = due_amount
+        info["prepayment"] = prepayment
 
         # Auto update status
         if info["start_date"]:
@@ -105,7 +113,8 @@ def run(*month_input):
             info['water_end'] = 0 if info['water_end'] == None else info['water_end']
             info['water_start'] = 0 if info['water_start'] == None else info['water_start']
             info['payment'] = 0 if info['payment'] == None else info['payment']
-            
+            info['prepayment'] = 0 if info['prepayment'] == None else info['prepayment']
+
             all_records.append({
                 "month": month,
                 "room": room,
@@ -115,6 +124,7 @@ def run(*month_input):
                 "electric_fee": info["electric_fee"],
                 "water_fee": info["water_fee"],
                 "bill": info["bill"],
+                "prepayment": info["prepayment"],
                 "payment": info["payment"],
                 "due_amount": info["due_amount"],
                 "status": info["status"],
@@ -124,7 +134,7 @@ def run(*month_input):
     - Tiền điện: {info["electric_fee"]:,.0f} = ({info["electric_end"]:,.0f} - {info["electric_start"]:,.0f}) * {electric_price:,.0f}đ/kWh
     - Tiền nước: {info["water_fee"]:,.0f} = ({info["water_end"]:,.0f} - {info["water_start"]:,.0f}) * {water_price:,.0f}đ/m3
     - Đã thanh toán/trả trước: {info["payment"]:,.0f}
-    - Còn thiếu: {info["bill"] - info["payment"]:,.0f}"""
+    - Còn thiếu: {info["due_amount"]:,.0f}"""
             })
             
     import pandas as pd
@@ -184,7 +194,7 @@ def run(*month_input):
     with open(file_tenant, "w", encoding="utf-8") as f:
         json.dump(tenant, f, ensure_ascii=False, indent=4)
 
-    print("✅ created rent_report.xlsx,room.json,price.json")
+    print("✅ created rent_report.xlsx,room.json,price.json,tenant.json")
 
 # =============================================================================
 # gen link webpage
@@ -208,6 +218,13 @@ def query(table):
     finally:
         conn.close()
     return(x)
+
+def querydf(table):
+    import sqlite3
+    conn = sqlite3.connect(db_file)
+    df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
+    conn.close()
+    return df
 
 # =============================================================================
 # ('prices', '202507.R3.electric_price', 3000/"abc")
@@ -417,8 +434,8 @@ def new_month():
             info["water_end"] = None  
             info["water_fee"] = None
             info["bill"]      = None
-            info["payment"]      = None if info['bill'] is None and info['payment'] is None else info['payment'] - info['bill']
-            info["payment_date"] = None if info["payment"] is None else info["payment_date"]
+            info["payment"] = None 
+            info["payment_date"] = None 
             info["due_amount"]   = None
     safe_mount_drive()
     import json
@@ -626,5 +643,135 @@ def change_tenant_status(**kwargs):
             tenants['active'],tenants['deactive'] =  active, deactive
             status_tenant(tenants)
             print('deactivated')
+            message = f"need to reset room {active[kwargs['tenant']]['Room']} [yes]: "
+            ask = input(message).upper()
+            if ask == "YES":
+                reset_room(active[kwargs['tenant']]['Room'])
     else:
         print("wrong status")
+
+def doanhthu():
+    import pandas as pd
+    import sqlite3
+    from openpyxl import load_workbook
+    from openpyxl.utils import get_column_letter
+    from datetime import datetime
+    from dateutil.relativedelta import relativedelta
+
+    rooms = query('rooms')
+    tenants = query('tenants')
+    thu = []
+
+    # --- Thu tiền phòng ---
+    for month in rooms:
+        for room in rooms[month]:
+            if rooms[month][room]['payment'] and rooms[month][room]['payment'] > 0:
+                thu.append({
+                    "Ngày": rooms[month][room]['payment_date'],
+                    "Số tiền": rooms[month][room]['payment'],
+                    "Nội dung": f"Phòng {room}, tháng {month}",
+                    "Tiền điện": rooms[month][room]['electric_fee'],
+                    "Tiền nước": rooms[month][room]['water_fee'],
+                    "Month": month
+                })
+
+    # --- Thu tiền cọc ---
+    for status in tenants:
+        for tenant in tenants[status]:
+            if tenants[status][tenant]['deposit'] != 0:
+                thu.append({
+                    "Ngày": tenants[status][tenant]['deposit_date'],
+                    "Số tiền": tenants[status][tenant]['deposit'],
+                    "Nội dung": f"Phòng {tenants[status][tenant]['room']} đặt cọc",
+                    "Tiền điện": None,
+                    "Tiền nước": None,
+                    "Month": None
+                })
+
+    # --- Tạo DataFrame ---
+    df = pd.DataFrame(thu)
+    df = df[df['Số tiền'] != 0]
+
+    # Thêm cột tháng điện/nước (lùi 1 tháng)
+    df['month_water_el'] = df['Month'].apply(
+        lambda x: datetime.strftime(datetime.strptime(str(x), "%Y%m") - relativedelta(months=1), "%Y%m")
+                  if pd.notna(x) else x
+    )
+
+    # Sắp xếp theo ngày
+    df['Ngày_dt'] = pd.to_datetime(df['Ngày'], format="%d/%m/%Y", errors="coerce")
+    df = df.sort_values(by="Ngày_dt", ascending=False).drop(columns=["Ngày_dt"])
+
+    # --- Xuất Excel ---
+    df.to_excel(file_cashflow, index=False, sheet_name="Report", engine="openpyxl")
+
+    wb = load_workbook(file_cashflow)
+    ws = wb["Report"]
+
+    # Auto-fit độ rộng cột
+    for col in ws.columns:
+        max_len = 0
+        for cell in col:
+            if cell.value:
+                max_len = max(max_len, len(str(cell.value)))
+        width = min(max_len + 2, 55)
+        ws.column_dimensions[get_column_letter(col[0].column)].width = width
+
+    # Định dạng số cho các cột tiền
+    for col_name in ["Số tiền", "Tiền điện", "Tiền nước"]:
+        if col_name in df.columns:
+            col_idx = df.columns.get_loc(col_name) + 1
+            for cell in ws.iter_cols(min_row=2, max_row=ws.max_row, min_col=col_idx, max_col=col_idx):
+                for c in cell:
+                    if isinstance(c.value, (int, float)):
+                        c.number_format = "#,##0"
+
+    wb.save(file_cashflow)
+
+    # --- Ghi đè bảng cashflow trong SQLite ---
+    conn = sqlite3.connect(db_file)
+    df.to_sql("cashflow", conn, if_exists="replace", index=False)
+    conn.close()
+
+
+# import sqlite3
+
+# conn = sqlite3.connect(db_file)
+# cursor = conn.cursor()
+
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS tong_diennuoc (
+#     Month TEXT PRIMARY KEY,
+#     So_dien REAL,
+#     So_nuoc REAL,
+#     Tien_dien REAL,
+#     Tien_nuoc REAL,
+#     Gia_dien REAL,
+#     Gia_nuoc REAL
+# )
+# """)
+# conn.commit()
+# conn.close()
+
+def save_utility(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+
+    # Tính giá bình quân
+    gia_dien = math.ceil(tien_dien / so_dien / 1000) * 1000 if so_dien > 0 else 0
+    gia_nuoc = math.ceil(tien_nuoc / so_nuoc / 1000) * 1000 if so_nuoc > 0 else 0
+
+    cursor.execute("""
+        INSERT INTO tong_diennuoc (Month, So_dien, So_nuoc, Tien_dien, Tien_nuoc, Gia_dien, Gia_nuoc)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(Month) DO UPDATE SET
+            So_dien=excluded.So_dien,
+            So_nuoc=excluded.So_nuoc,
+            Tien_dien=excluded.Tien_dien,
+            Tien_nuoc=excluded.Tien_nuoc,
+            Gia_dien=excluded.Gia_dien,
+            Gia_nuoc=excluded.Gia_nuoc
+    """, (month, so_dien, so_nuoc, tien_dien, tien_nuoc, gia_dien, gia_nuoc))
+    conn.commit()
+    conn.close()
+    print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
