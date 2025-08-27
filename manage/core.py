@@ -30,6 +30,10 @@ def run(*month_input):
     this_month = datetime.strftime(today, "%Y%m")
 
     safe_mount_drive()
+    tong_diennuoc = querydf('tong_diennuoc')
+    if this_month not in tong_diennuoc['Month']:
+        print("Chưa có hóa đơn tổng điện nước tháng này")
+        return
 
     tenant = query('tenants')    
 
@@ -754,12 +758,30 @@ def doanhthu():
 # conn.close()
 
 def save_utility(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
+    from datetime import datetime
+
+    today = datetime.now()
+    this_month = datetime.strftime(today, "%Y%m")
+
+    if month != this_month:
+        print("Tháng không phải tháng hiện tại")
+        ask = input("Có muốn tiếp tục không [yessss]: ").lower()
+        if ask != 'yessss':
+            return
+
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
 
     # Tính giá bình quân
     gia_dien = math.ceil(tien_dien / so_dien / 1000) * 1000 if so_dien > 0 else 0
     gia_nuoc = math.ceil(tien_nuoc / so_nuoc / 1000) * 1000 if so_nuoc > 0 else 0
+    electric_price = query('prices')[month]['electric_price']
+    water_price = query('prices')[month]['water_price']
+    if gia_dien > electric_price:
+        update('prices', f'{month}.electric_price', gia_dien)
+    if gia_nuoc > water_price:
+        update('prices', f'{month}.water_price', gia_nuoc)
+
 
     cursor.execute("""
         INSERT INTO tong_diennuoc (Month, So_dien, So_nuoc, Tien_dien, Tien_nuoc, Gia_dien, Gia_nuoc)
@@ -775,3 +797,6 @@ def save_utility(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
     conn.commit()
     conn.close()
     print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
+    run(1)
+    print("Đã cập nhật giá vào room")
+
