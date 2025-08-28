@@ -129,7 +129,7 @@ def run(*month_input):
             info['water_start'] = 0 if info['water_start'] == None else info['water_start']
             info['payment'] = 0 if info['payment'] == None else info['payment']
             info['prepayment'] = 0 if info['prepayment'] == None else info['prepayment']
-
+           
             all_records.append({
                 "month": month,
                 "room": room,
@@ -159,6 +159,7 @@ def run(*month_input):
     # Xuất dữ liệu ra Excel bằng pandas + openpyxl
     df = pd.DataFrame(all_records)
     df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] not in [0,'0'] else '', axis = 1) # bỏ notify các dòng đẫ thanh toán
+    df['zalo_link'] = df.apply(lambda row: row['zalo_link'] if row['due_amount'] not in [0,'0'] else '', axis = 1) # bỏ zalo_link các dòng đẫ thanh toán
     df = df[df['status'] != 'available'] # bỏ bớt các dòng chưa cho thuê
     col_remain = list(df.columns) 
     col_remain.remove('status')
