@@ -5,6 +5,22 @@ file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
 file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
 file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 
+
+
+def brief():
+    print("""
+          manange.tong_diennuoc(): Nhập số tiền điện, tiền nước tổng theo tháng
+              ("202508", 315, 7, 943380, 100000)
+          manage.chi_khac(): các khoản chi khác
+              (date, noidung_chi, sotien_chi, ghichu):
+          manage.query(): trả json các bảng rooms, tenants, prices
+          manage.querydf(): trả df các bảng cashflow, chi khac
+          manage.dien_nuoc(): Nhập số CÔNG TƠ điện nước theo từng phòng
+          manage.run(): Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
+          manage.pay(): Nhập số tiền thanh toán theo từng phòng
+          manage.view(): Mở link web
+          
+""")
 # =============================================================================
 # mount drive folder
 # =============================================================================
@@ -655,6 +671,9 @@ def change_tenant_status(**kwargs):
     else:
         print("wrong status")
 
+# =============================================================================
+# Thống kê chi phí, doanh thu và tính toán số tiền tồn trên tài khoản
+# =============================================================================
 def doanhthu():
     safe_mount_drive()
     import pandas as pd
@@ -817,6 +836,7 @@ def doanhthu():
 
 # =============================================================================
 # Nhập số tiền chi điện nước
+# tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc)
 # =============================================================================
 def tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
     safe_mount_drive()
@@ -871,6 +891,7 @@ def tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
 
 # =============================================================================
 # Nhập số tiền chi ra khác
+# chi_khac('30/06/2025', "Chuyển tiền sang thấu chi", 5000000, "")
 # =============================================================================
 def chi_khac(date, noidung_chi, sotien_chi, ghichu):
     safe_mount_drive()
@@ -894,7 +915,7 @@ def chi_khac(date, noidung_chi, sotien_chi, ghichu):
 #     id INTEGER PRIMARY KEY AUTOINCREMENT,
 #     date TEXT NOT NULL,
 #     noidung_chi TEXT NOT NULL,
-#     sotien_chi REAL NOT NULL
+#     sotien_chi REAL NOT NULL,
 #     ghichu TEXT
 # )
 # """)
