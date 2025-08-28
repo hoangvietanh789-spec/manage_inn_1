@@ -366,6 +366,7 @@ def pay():
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
     run(1) # (1) to avoid asking month
+    doanhthu()
 
 # =============================================================================
 # add new room by insert data clob
