@@ -894,7 +894,7 @@ def chi_khac(date, noidung_chi, sotien_chi, ghichu):
 #     id INTEGER PRIMARY KEY AUTOINCREMENT,
 #     date TEXT NOT NULL,
 #     noidung_chi TEXT NOT NULL,
-#     sotien_chi REAL NOT NULL,
+#     sotien_chi REAL NOT NULL
 #     ghichu TEXT
 # )
 # """)
