@@ -97,7 +97,7 @@ def run(*month_input):
         if bill <= prepayment:
             due_amount = 0
         elif bill > prepayment:
-            due_amount = bill - prepayment - payment
+            due_amount = bill - prepayment - payment if bill - prepayment - payment > 0 else 0
 
         # Cập nhật vào dict
         info["electric_fee"] = electric_fee
