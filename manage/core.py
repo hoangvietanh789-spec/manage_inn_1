@@ -5,8 +5,6 @@ file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
 file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
 file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 
-
-
 def brief():
     print("""
           manange.tong_diennuoc(): Nhập số tiền điện, tiền nước tổng theo tháng
@@ -21,6 +19,7 @@ def brief():
           manage.view(): Mở link web
           
 """)
+
 # =============================================================================
 # mount drive folder
 # =============================================================================
@@ -96,19 +95,15 @@ def run(*month_input):
 
         bill = rent_price + electric_fee + water_fee
         if bill <= prepayment:
-            bill = 0
-            prepayment = prepayment - bill
             due_amount = 0
         elif bill > prepayment:
-            bill = due_amount = bill - prepayment
-            prepayment = 0
+            due_amount = bill - prepayment - payment
 
         # Cập nhật vào dict
         info["electric_fee"] = electric_fee
         info["water_fee"] = water_fee
         info["bill"] = bill
         info["due_amount"] = due_amount
-        info["prepayment"] = prepayment
 
         # Auto update status
         if info["start_date"]:
@@ -122,8 +117,8 @@ def run(*month_input):
         for room, info in rooms.items():
             if month in month_tocal and info['status'] == 'rented':
                 info = calculate(room, info)
-                for fo in ['electric_fee','water_fee','rent_price','payment','bill','due_amount', 'status']:
-                    update('rooms', f'{month}.{room}.{fo}', info[fo]) #update trước rồi mới convert để gen file như dưới đây
+                for fo in ['electric_fee','water_fee','bill','due_amount']: # chỉ cập nhật các trường tính toán riêng prepay sẽ cập nhật khi new_month
+                     update('rooms', f'{month}.{room}.{fo}', info[fo]) #update trước rồi mới convert để gen file như dưới đây
             info['bill'] = 0 if info['bill'] == None else info['bill']
             info['rent_price'] = 0 if info['rent_price'] == None else info['rent_price']
             info['electric_fee'] = 0 if info['electric_fee'] == None else info['electric_fee']
@@ -446,6 +441,10 @@ def new_month():
     
     for room, info in data[new_month].items():
         if room in ["R1", "R2", "R3", "R4", "R5"]:
+            if info['bill'] <= info['prepayment']:
+                info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
+            else:
+                info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
             info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
             info["end_date"] = datetime.strftime(datetime.strptime(info["end_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["end_date"] is not None else None
             info["due_date"]   = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
@@ -456,9 +455,9 @@ def new_month():
             info["water_end"] = None  
             info["water_fee"] = None
             info["bill"]      = None
-            info["payment"] = None 
+            info["payment"] = 0 
             info["payment_date"] = None 
-            info["due_amount"]   = None
+            info["due_amount"]   = 0
     safe_mount_drive()
     import json
     import sqlite3
