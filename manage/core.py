@@ -656,10 +656,12 @@ def change_tenant_status(**kwargs):
         print("wrong status")
 
 def doanhthu():
+    safe_mount_drive()
     import pandas as pd
     import sqlite3
     from openpyxl import load_workbook
     from openpyxl.utils import get_column_letter
+    from openpyxl.styles import Font, Border, Side
     from datetime import datetime
     from dateutil.relativedelta import relativedelta
 
@@ -673,7 +675,7 @@ def doanhthu():
             if rooms[month][room]['payment'] and rooms[month][room]['payment'] > 0:
                 thu.append({
                     "Ngày": rooms[month][room]['payment_date'],
-                    "Số tiền": rooms[month][room]['payment'],
+                    "Số tiền thu": rooms[month][room]['payment'],
                     "Nội dung": f"Phòng {room}, tháng {month}",
                     "Tiền điện": rooms[month][room]['electric_fee'],
                     "Tiền nước": rooms[month][room]['water_fee'],
@@ -686,7 +688,7 @@ def doanhthu():
             if tenants[status][tenant]['deposit'] != 0:
                 thu.append({
                     "Ngày": tenants[status][tenant]['deposit_date'],
-                    "Số tiền": tenants[status][tenant]['deposit'],
+                    "Số tiền thu": tenants[status][tenant]['deposit'],
                     "Nội dung": f"Phòng {tenants[status][tenant]['room']} đặt cọc",
                     "Tiền điện": None,
                     "Tiền nước": None,
@@ -695,7 +697,7 @@ def doanhthu():
 
     # --- Tạo DataFrame ---
     df = pd.DataFrame(thu)
-    df = df[df['Số tiền'] != 0]
+    df = df[df['Số tiền thu'] != 0]
 
     # Thêm cột tháng điện/nước (lùi 1 tháng)
     df['month_water_el'] = df['Month'].apply(
@@ -703,47 +705,102 @@ def doanhthu():
                   if pd.notna(x) else x
     )
 
+    df_diennuoc = querydf("tong_diennuoc")
+    df_diennuoc['Ngày'] = df_diennuoc.apply(lambda row: datetime.strftime(datetime.strptime(row['Month'], "%Y%m"),"%d/%m/%Y"), axis = 1)
+    df_diennuoc["Số tiền chi"] = -df_diennuoc["Tien_dien"] - df_diennuoc["Tien_nuoc"]
+    df_diennuoc["Nội dung chi"] = df_diennuoc.apply(lambda row: f"Tiền điện: {row['Tien_dien']:,}, tiền nước: {row['Tien_nuoc']:,}", axis = 1)
+    df_diennuoc = df_diennuoc[['Ngày','Số tiền chi','Nội dung chi', 'month_water_el']]
+    
+    df_chikhac = querydf("chikhac")
+    df_chikhac['Số tiền chi'] = 0 - df_chikhac['sotien_chi']
+    df_chikhac = df_chikhac.rename(columns = {'date':'Ngày',
+                                'noidung_chi':"Nội dung chi"})
+    df_chikhac.drop(columns = ['id', 'sotien_chi'], inplace=True)
+    
+    total_in = df['Số tiền thu'].sum()
+    total_out = - df_diennuoc["Số tiền chi"].sum() - df_chikhac["Số tiền chi"].sum()
+    new_record = [["", ""],
+                  ["Tổng thu", total_in],
+                  ['Tổng chi', total_out],
+                  ['Còn trên tài khoản', total_in - total_out]]
+    
+    df = pd.concat([df, df_diennuoc, df_chikhac], ignore_index=True)   
     # Sắp xếp theo ngày
     df['Ngày_dt'] = pd.to_datetime(df['Ngày'], format="%d/%m/%Y", errors="coerce")
     df = df.sort_values(by="Ngày_dt", ascending=False).drop(columns=["Ngày_dt"])
-
+    
+    #tính toán số tiền chênh điện nước
+    df_grouped = df.groupby("month_water_el")[["Tiền điện", "Tiền nước", "Số tiền chi"]].sum().reset_index()
+    df_grouped['Chênh lệch'] = df_grouped["Tiền điện"] +  df_grouped["Tiền nước"] + df_grouped["Số tiền chi"]
+    df_grouped.sort_values(by = 'month_water_el', ascending = False, inplace = True)
+    
+    # thêm các dòng tổng
+    df = pd.concat([df, pd.DataFrame(new_record, columns = ['Ngày', 'Số tiền thu'])], ignore_index=True)
     # --- Xuất Excel ---
-    df.to_excel(file_cashflow, index=False, sheet_name="Report", engine="openpyxl")
+    with pd.ExcelWriter(file_cashflow, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="CashFlow")
+        df_grouped.to_excel(writer, index=False, sheet_name="WaterElec")
 
     wb = load_workbook(file_cashflow)
-    ws = wb["Report"]
-
-    # Auto-fit độ rộng cột
-    for col in ws.columns:
-        max_len = 0
-        for cell in col:
-            if cell.value:
-                max_len = max(max_len, len(str(cell.value)))
-        width = min(max_len + 2, 55)
-        ws.column_dimensions[get_column_letter(col[0].column)].width = width
-
-    # Định dạng số cho các cột tiền
-    for col_name in ["Số tiền", "Tiền điện", "Tiền nước"]:
-        if col_name in df.columns:
-            col_idx = df.columns.get_loc(col_name) + 1
-            for cell in ws.iter_cols(min_row=2, max_row=ws.max_row, min_col=col_idx, max_col=col_idx):
-                for c in cell:
-                    if isinstance(c.value, (int, float)):
-                        c.number_format = "#,##0"
-
+    
+    # Danh sách sheet cần xử lý
+    for sheet_name in ["CashFlow", "WaterElec"]:
+        if sheet_name not in wb.sheetnames:
+            continue
+        
+        ws = wb[sheet_name]
+    
+        # Auto-fit độ rộng cột
+        for col in ws.columns:
+            max_len = 0
+            for cell in col:
+                if cell.value:
+                    max_len = max(max_len, len(str(cell.value)))
+            width = min(max_len + 2, 55)
+            ws.column_dimensions[get_column_letter(col[0].column)].width = width
+    
+        # Border đôi cho dòng cuối
+        double_bottom = Border(bottom=Side(style="double"))
+    
+        if sheet_name == "CashFlow":
+            money_cols = ["Số tiền thu", "Tiền điện", "Tiền nước", "Số tiền chi"]
+        else:  # WaterElec
+            money_cols = ["Tiền điện", "Tiền nước", "Số tiền chi", "Chênh lệch"]
+    
+        # Định dạng số cho các cột tiền
+        headers = [cell.value for cell in ws[1]]
+        for col_name in money_cols:
+            if col_name in headers:
+                col_idx = headers.index(col_name) + 1
+                for col_cells in ws.iter_cols(min_row=2, max_row=ws.max_row,
+                                              min_col=col_idx, max_col=col_idx):
+                    for cell in col_cells:
+                        # Ép kiểu float nếu có thể
+                        try:
+                            cell.value = float(cell.value)
+                        except (TypeError, ValueError):
+                            continue
+                        cell.number_format = "#,##0"
+    
+        # Bôi đậm 3 dòng cuối, dòng cuối có border đôi
+        max_row = ws.max_row
+        for row in range(max_row - 2, max_row + 1):
+            for cell in ws[row]:
+                cell.font = Font(bold=True)
+                if row == max_row:
+                    cell.border = double_bottom
+    
     wb.save(file_cashflow)
 
     # --- Ghi đè bảng cashflow trong SQLite ---
     conn = sqlite3.connect(db_file)
     df.to_sql("cashflow", conn, if_exists="replace", index=False)
     conn.close()
-
+    print("Đã cập nhật cashflow")
 
 # import sqlite3
-
 # conn = sqlite3.connect(db_file)
 # cursor = conn.cursor()
-
 # cursor.execute("""
 # CREATE TABLE IF NOT EXISTS tong_diennuoc (
 #     Month TEXT PRIMARY KEY,
@@ -758,26 +815,32 @@ def doanhthu():
 # conn.commit()
 # conn.close()
 
-def save_utility(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
+# =============================================================================
+# Nhập số tiền chi điện nước
+# =============================================================================
+def tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
+    safe_mount_drive()
     import sqlite3
     import math
     from datetime import datetime
-
+    from dateutil.relativedelta import relativedelta
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
 
+    
     if month != this_month:
         print("Tháng không phải tháng hiện tại")
         ask = input("Có muốn tiếp tục không [yessss]: ").lower()
         if ask != 'yessss':
             return
+    month_water_el = datetime.strftime(datetime.strptime(str(month), "%Y%m") - relativedelta(months=1), "%Y%m")
 
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
 
     # Tính giá bình quân
-    gia_dien = math.ceil(tien_dien / so_dien / 1000) * 1000 if so_dien > 0 else 0
-    gia_nuoc = math.ceil(tien_nuoc / so_nuoc / 1000) * 1000 if so_nuoc > 0 else 0
+    gia_dien = math.ceil(tien_dien / so_dien / 100) * 100 if so_dien > 0 else 0
+    gia_nuoc = math.ceil(tien_nuoc / so_nuoc / 100) * 100 if so_nuoc > 0 else 0
     electric_price = query('prices')[month]['electric_price']
     water_price = query('prices')[month]['water_price']
     if gia_dien > electric_price:
@@ -787,19 +850,66 @@ def save_utility(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
 
 
     cursor.execute("""
-        INSERT INTO tong_diennuoc (Month, So_dien, So_nuoc, Tien_dien, Tien_nuoc, Gia_dien, Gia_nuoc)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO tong_diennuoc (Month, So_dien, So_nuoc, Tien_dien, Tien_nuoc, Gia_dien, Gia_nuoc, month_water_el)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(Month) DO UPDATE SET
             So_dien=excluded.So_dien,
             So_nuoc=excluded.So_nuoc,
             Tien_dien=excluded.Tien_dien,
             Tien_nuoc=excluded.Tien_nuoc,
             Gia_dien=excluded.Gia_dien,
-            Gia_nuoc=excluded.Gia_nuoc
-    """, (month, so_dien, so_nuoc, tien_dien, tien_nuoc, gia_dien, gia_nuoc))
+            Gia_nuoc=excluded.Gia_nuoc,
+            month_water_el = excluded.month_water_el
+    """, (month, so_dien, so_nuoc, tien_dien, tien_nuoc, gia_dien, gia_nuoc, month_water_el))
     conn.commit()
     conn.close()
     print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
     run(1)
     print("Đã cập nhật giá vào room")
+    doanhthu()
+    
 
+# =============================================================================
+# Nhập số tiền chi ra khác
+# =============================================================================
+def chi_khac(date, noidung_chi, sotien_chi, ghichu):
+    safe_mount_drive()
+    import sqlite3
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO chikhac (date, noidung_chi, sotien_chi, ghichu)
+        VALUES (?, ?, ?, ?)
+    """, (date, noidung_chi, sotien_chi, ghichu))
+    conn.commit()
+    conn.close()
+    print(f"Đã lưu ngày {date}: chi {sotien_chi:,} - ghi chú: {ghichu}")
+    doanhthu()
+
+# import sqlite3
+# conn = sqlite3.connect(db_file)
+# cursor = conn.cursor()
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS chikhac (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     date TEXT NOT NULL,
+#     noidung_chi TEXT NOT NULL,
+#     sotien_chi REAL NOT NULL,
+#     ghichu TEXT
+# )
+# """)
+# conn.commit()
+# conn.close()
+
+# =============================================================================
+# Xóa 1 dòng trong bảng chikhac trong trường hợp nhập nhầm thông tin
+# =============================================================================
+def xoa_chi_khac(record_id):
+    import sqlite3
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    # Xóa theo id
+    cursor.execute("DELETE FROM chikhac WHERE id = ?", (record_id,))
+    conn.commit()
+    conn.close()
+    print(f"Đã xóa bản ghi id={record_id} trong bảng chikhac")
