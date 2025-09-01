@@ -442,10 +442,15 @@ def new_month():
     
     for room, info in data[new_month].items():
         if room in ["R1", "R2", "R3", "R4", "R5"]:
-            if info['bill'] <= info['prepayment']:
-                info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
-            else:
-                info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
+            if info['bill'] and info['prepayment'] and info['payment']:
+            	if info['bill'] <= info['prepayment']:
+             	   info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
+            	else:
+             	   info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
+            elif info['prepayment'] is not None and info['payment'] is not None:
+                info['prepayment'] += info['payment']
+            elif info['prepayment'] is None:
+                info['prepayment'] = info['payment'] 
             info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
             info["end_date"] = datetime.strftime(datetime.strptime(info["end_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["end_date"] is not None else None
             info["due_date"]   = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
