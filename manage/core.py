@@ -164,6 +164,7 @@ def run(*month_input):
     col_remain = list(df.columns) 
     col_remain.remove('status')
     df = df[col_remain]
+    df.sort_values(by = ['month','room'], ascending = [False, True], inplace = True)
     df.to_excel(file_report, index=False, sheet_name="Report", engine="openpyxl")
     # Mở lại file bằng openpyxl để chỉnh sửa
     wb = load_workbook(file_report)
