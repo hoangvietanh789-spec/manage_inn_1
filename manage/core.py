@@ -2,6 +2,7 @@ db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
 file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
 file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
 file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
+file_cashbanoi = "/content/drive/MyDrive/Dau_tu/data/cash_banoi.xlsx"
 file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
 file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 
@@ -746,13 +747,17 @@ def doanhthu():
     df_chikhac = df_chikhac.rename(columns = {'date':'Ngày',
                                 'noidung_chi':"Nội dung chi"})
     df_chikhac.drop(columns = ['id', 'sotien_chi'], inplace=True)
-    
+
+    df_cash = pd.read_excel(file_cashbanoi)
     total_in = df['Số tiền thu'].sum()
     total_out = - df_diennuoc["Số tiền chi"].sum() - df_chikhac["Số tiền chi"].sum()
     new_record = [["", ""],
                   ["Tổng thu", total_in],
                   ['Tổng chi', total_out],
-                  ['Còn trên tài khoản', total_in - total_out]]
+                  ['Chênh lệnh thu chi', total_in - total_out],
+                  ['Tiền mặt bà đang cầm hộ', df_cash.sum()],
+                  ['Số dư tài khoản', total_in - total_out - df_cash.sum()]
+                 ]
     
     df = pd.concat([df, df_diennuoc, df_chikhac], ignore_index=True)   
     # Sắp xếp theo ngày
