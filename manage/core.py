@@ -832,52 +832,6 @@ def doanhthu():
     conn.close()
     print("Đã cập nhật cashflow")
 
-
-    # cập nhật lại định dạng và cho 4 dòng cuối lên đầu
-    wb = load_workbook(file_cashflow)
-    ws = wb.active  # Hoặc wb["Tên sheet"]
-    
-    max_row = ws.max_row
-    max_col = ws.max_column
-    
-    # --- 1. Lưu lại dữ liệu và style của 4 dòng cuối ---
-    last_4_rows = []
-    for r in range(max_row - 3, max_row + 1):
-        row_data = []
-        for c in range(1, max_col + 1):
-            cell = ws.cell(row=r, column=c)
-            row_data.append({
-                "value": cell.value,
-                "font": cell.font.copy(),
-                "fill": cell.fill.copy(),
-                "border": cell.border.copy(),
-                "alignment": cell.alignment.copy(),
-                "number_format": cell.number_format,
-                "protection": cell.protection.copy()
-            })
-        last_4_rows.append(row_data)
-    
-    # --- 2. Xóa 4 dòng cuối ---
-    ws.delete_rows(max_row - 3, 4)
-    
-    # --- 3. Chèn 4 dòng mới lên đầu và dán lại dữ liệu + style ---
-    for i, row_data in enumerate(last_4_rows, start=1):
-        ws.insert_rows(i)  # chèn dòng trống
-        for j, cell_info in enumerate(row_data, start=1):
-            cell = ws.cell(row=i, column=j)
-            cell.value = cell_info["value"]
-            cell.font = cell_info["font"]
-            cell.fill = cell_info["fill"]
-            cell.border = cell_info["border"]
-            cell.alignment = cell_info["alignment"]
-            cell.number_format = cell_info["number_format"]
-            cell.protection = cell_info["protection"]
-    
-    # --- 4. Lưu lại ---
-    wb.save("cashflow_reordered.xlsx")
-
-
-
 # import sqlite3
 # conn = sqlite3.connect(db_file)
 # cursor = conn.cursor()
