@@ -751,8 +751,7 @@ def doanhthu():
     df_cash = pd.read_excel(file_cashbanoi)
     total_in = df['Số tiền thu'].sum()
     total_out = - df_diennuoc["Số tiền chi"].sum() - df_chikhac["Số tiền chi"].sum()
-    new_record = [["", ""],
-                  ["Tổng thu", total_in],
+    new_record = [["Tổng thu", total_in],
                   ['Tổng chi', total_out],
                   ['Chênh lệnh thu chi', total_in - total_out],
                   ['Tiền mặt bà đang cầm hộ', df_cash['amount'].sum()],
@@ -819,10 +818,10 @@ def doanhthu():
     
         # Bôi đậm 5 dòng đầu, dòng cuối có border đôi
         max_row = ws.max_row
-        for row in range(1, 5+1):
+        for row in range(1, 6+1):
             for cell in ws[row]:
                 cell.font = Font(bold=True)
-                if row == 5:
+                if row == 6:
                     cell.border = double_bottom
     
     wb.save(file_cashflow)
