@@ -448,10 +448,10 @@ def new_month():
     for room, info in data[new_month].items():
         if room in ["R1", "R2", "R3", "R4", "R5"]:
             if info['bill'] and info['prepayment'] and info['payment']:
-            	if info['bill'] <= info['prepayment']:
-             	   info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
-            	else:
-             	   info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
+                if info['bill'] <= info['prepayment']:
+                   info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
+                else:
+                   info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
             elif info['prepayment'] is not None and info['payment'] is not None:
                 info['prepayment'] += info['payment']
             elif info['prepayment'] is None:
@@ -755,8 +755,8 @@ def doanhthu():
                   ["Tổng thu", total_in],
                   ['Tổng chi', total_out],
                   ['Chênh lệnh thu chi', total_in - total_out],
-                  ['Tiền mặt bà đang cầm hộ', df_cash.sum()],
-                  ['Số dư tài khoản', total_in - total_out - df_cash.sum()]
+                  ['Tiền mặt bà đang cầm hộ', df_cash['amount'].sum()],
+                  ['Số dư tài khoản', total_in - total_out - df_cash['amount'].sum()]
                  ]
     
     df = pd.concat([df, df_diennuoc, df_chikhac], ignore_index=True)   
