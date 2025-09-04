@@ -770,7 +770,7 @@ def doanhthu():
     df_grouped.sort_values(by = 'month_water_el', ascending = False, inplace = True)
     
     # thêm các dòng tổng
-    df = pd.concat([df, pd.DataFrame(new_record, columns = ['Ngày', 'Số tiền thu'])], ignore_index=True)
+    df = pd.concat([pd.DataFrame(new_record, columns = ['Ngày', 'Số tiền thu']), df], ignore_index=True)
     # --- Xuất Excel ---
     with pd.ExcelWriter(file_cashflow, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="CashFlow")
@@ -817,12 +817,12 @@ def doanhthu():
                             continue
                         cell.number_format = "#,##0"
     
-        # Bôi đậm 3 dòng cuối, dòng cuối có border đôi
+        # Bôi đậm 5 dòng đầu, dòng cuối có border đôi
         max_row = ws.max_row
-        for row in range(max_row - 2, max_row + 1):
+        for row in range(1, 5+1):
             for cell in ws[row]:
                 cell.font = Font(bold=True)
-                if row == max_row:
+                if row == 5:
                     cell.border = double_bottom
     
     wb.save(file_cashflow)
