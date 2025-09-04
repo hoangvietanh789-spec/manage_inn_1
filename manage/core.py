@@ -283,6 +283,9 @@ def import_json():
 
     conn = sqlite3.connect("/content/drive/MyDrive/Dau_tu/data/inn.db")
     cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS rooms")
+    cursor.execute("DROP TABLE IF EXISTS prices")
+    cursor.execute("DROP TABLE IF EXISTS tenants")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS rooms (
