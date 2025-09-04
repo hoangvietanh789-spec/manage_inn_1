@@ -572,7 +572,7 @@ def manualmap_tenant():
     rooms = query("rooms")[this_month]
     tenants = query("tenants")['active']
     for tenant in tenants.keys():
-        print(tenants[tenant],tenants[tenant]['room'])
+        print(tenant,tenants[tenant]['room'])
     t = input("tenant: ")
     if t not in tenants:
         print(t, "not in tenants")
