@@ -7,16 +7,19 @@ file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"
 file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 
 def brief():
+    from datetime import datetime
+    this_month = datetime.strftime(datetime.now(), "%Y%m")
     print("""
           manange.tong_diennuoc(): Nhập số tiền điện, tiền nước tổng theo tháng
-              ("202508", 315, 7, 943380, 100000)
+              ("{this_month}", sodien, tien dien, sonuoc, tiennuoc)
+          manage.pay(): Nhập số tiền thanh toán theo từng phòng
           manage.chi_khac(): các khoản chi khác
               (date, noidung_chi, sotien_chi, ghichu):
           manage.query(): trả json các bảng rooms, tenants, prices
-          manage.querydf(): trả df các bảng cashflow, chi khac
+          manage.querydf(): trả df các bảng cashflow, tong_diennuoc, chikhac
           manage.dien_nuoc(): Nhập số CÔNG TƠ điện nước theo từng phòng
           manage.run(): Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
-          manage.pay(): Nhập số tiền thanh toán theo từng phòng
+          manage.doanhthu(): Tính toán cân đối thu chi
           manage.view(): Mở link web
           
 """)
@@ -840,11 +843,12 @@ def doanhthu():
 # CREATE TABLE IF NOT EXISTS tong_diennuoc (
 #     Month TEXT PRIMARY KEY,
 #     So_dien REAL,
-#     So_nuoc REAL,
 #     Tien_dien REAL,
-#     Tien_nuoc REAL,
 #     Gia_dien REAL,
-#     Gia_nuoc REAL
+#     So_nuoc REAL,
+#     Tien_nuoc REAL,
+#     Gia_nuoc REAL,
+#     month_water_el TEXT
 # )
 # """)
 # conn.commit()
@@ -854,7 +858,7 @@ def doanhthu():
 # Nhập số tiền chi điện nước
 # tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc)
 # =============================================================================
-def tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
+def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     safe_mount_drive()
     import sqlite3
     import math
@@ -863,7 +867,6 @@ def tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
 
-    
     if month != this_month:
         print("Tháng không phải tháng hiện tại")
         ask = input("Có muốn tiếp tục không [yessss]: ").lower()
@@ -886,17 +889,17 @@ def tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc):
 
 
     cursor.execute("""
-        INSERT INTO tong_diennuoc (Month, So_dien, So_nuoc, Tien_dien, Tien_nuoc, Gia_dien, Gia_nuoc, month_water_el)
+        INSERT INTO tong_diennuoc (Month, So_dien, Tien_dien, Gia_dien, So_nuoc, Tien_nuoc, Gia_nuoc, month_water_el)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(Month) DO UPDATE SET
             So_dien=excluded.So_dien,
-            So_nuoc=excluded.So_nuoc,
             Tien_dien=excluded.Tien_dien,
-            Tien_nuoc=excluded.Tien_nuoc,
             Gia_dien=excluded.Gia_dien,
+            So_nuoc=excluded.So_nuoc,
+            Tien_nuoc=excluded.Tien_nuoc,
             Gia_nuoc=excluded.Gia_nuoc,
             month_water_el = excluded.month_water_el
-    """, (month, so_dien, so_nuoc, tien_dien, tien_nuoc, gia_dien, gia_nuoc, month_water_el))
+    """, (month, so_dien, tien_dien, gia_dien, so_nuoc, tien_nuoc, gia_nuoc, month_water_el))
     conn.commit()
     conn.close()
     print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
