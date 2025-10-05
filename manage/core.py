@@ -93,11 +93,12 @@ def run(*month_input):
         else:
             water_fee = 0
 
-        rent_price = info["rent_price"] or 0
+        bill = info["rent_price"] or 0
         payment = info["payment"] or 0
         prepayment = info['prepayment'] or 0
 
-        bill = rent_price + electric_fee + water_fee
+        bill += electric_fee if electric_fee >= 0 else bill
+        bill +=  water_fee if water_fee >= 0 else bill
         if bill <= prepayment:
             due_amount = 0
         elif bill > prepayment:
@@ -469,7 +470,7 @@ def new_month():
             info["water_start"]    = info["water_end"]  
             info["water_end"] = None  
             info["water_fee"] = None
-            info["bill"]      = None
+            info["bill"]      = 0
             info["payment"] = 0 
             info["payment_date"] = None 
             info["due_amount"]   = 0
