@@ -452,7 +452,7 @@ def new_month():
     
     for room, info in data[new_month].items():
         if room in ["R1", "R2", "R3", "R4", "R5"]:
-            print(f"=====room=====")
+            print(f"====={room}=====")
             if info['bill'] and info['prepayment'] and info['payment']:
                 if info['bill'] <= info['prepayment']:
                    info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
