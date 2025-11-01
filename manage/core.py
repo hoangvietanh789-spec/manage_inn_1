@@ -462,9 +462,18 @@ def new_month():
                 info['prepayment'] += info['payment']
             elif info['prepayment'] is None:
                 info['prepayment'] = info['payment'] 
-            info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
-            info["end_date"] = datetime.strftime(datetime.strptime(info["end_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["end_date"] is not None else None
-            info["due_date"]   = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
+            try:
+                info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
+            except Exception as ex:
+                print(ex, info["start_date"])
+            try:
+                info["end_date"] = datetime.strftime(datetime.strptime(info["end_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["end_date"] is not None else None
+            except Exception as ex:
+                print(ex, info["end_date"])
+            try:
+                info["due_date"] = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
+            except Exception as ex:
+                print(ex, info["due_date"])
             info["electric_start"] = info["electric_end"]  
             info["electric_end"]   = None  
             info["electric_fee"]   = None
