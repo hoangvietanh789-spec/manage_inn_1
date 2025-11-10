@@ -97,8 +97,8 @@ def run(*month_input):
         payment = info["payment"] or 0
         prepayment = info['prepayment'] or 0
 
-        bill += electric_fee if electric_fee >= 0 else bill
-        bill +=  water_fee if water_fee >= 0 else bill
+        bill = bill + electric_fee if electric_fee >= 0 else bill
+        bill = bill +  water_fee if water_fee >= 0 else bill
         if bill <= prepayment:
             due_amount = 0
         elif bill > prepayment:
