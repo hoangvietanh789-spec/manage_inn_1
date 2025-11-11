@@ -10,18 +10,20 @@ def brief():
     from datetime import datetime
     this_month = datetime.strftime(datetime.now(), "%Y%m")
     print("""
-          manange.tong_diennuoc(): Nhập số tiền điện, tiền nước tổng theo tháng
-              ("{this_month}", sodien, tien dien, sonuoc, tiennuoc)
+        ====================================
+          manange.tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc): Nhập số tiền điện, tiền nước tổng theo tháng
           manage.pay(): Nhập số tiền thanh toán theo từng phòng
-          manage.chi_khac(): các khoản chi khác
-              (date, noidung_chi, sotien_chi, ghichu):
+          manage.chikhac('dd/mm/yyyy', 'noidung', sotien_chi, ''): các khoản chi khác
+          manage.diennuoc(): Nhập số CÔNG TƠ điện nước theo từng phòng
+          manage.tinhtien(): Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
+          manage.doanhthu(): Tính toán cân đối thu chi
+        ====================================
           manage.query(): trả json các bảng rooms, tenants, prices
           manage.querydf(): trả df các bảng cashflow, tong_diennuoc, chikhac
-          manage.dien_nuoc(): Nhập số CÔNG TƠ điện nước theo từng phòng
-          manage.run(): Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
-          manage.doanhthu(): Tính toán cân đối thu chi
+        ====================================
           manage.view(): Mở link web
-          
+        ====================================
+          manage.update
 """)
 
 # =============================================================================
@@ -38,9 +40,9 @@ def safe_mount_drive(mount_point="/content/drive"):
             drive.mount(mount_point)
             
 # =============================================================================
-# calculate and gen report file
+# Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
 # =============================================================================
-def run(*month_input):
+def tinhtien(*month_input):
     import json
     import pandas as pd
     from datetime import datetime
@@ -227,6 +229,9 @@ def view():
     url = "https://sites.google.com/view/trosupham2vietxocodien"
     return(HTML(f'<a href="{url}" target="_blank">👉 Mở trang web</a>'))
 
+# =============================================================================
+# trả json các bảng rooms, tenants, prices
+# =============================================================================
 def query(table):
     import sqlite3
     import json
@@ -242,6 +247,9 @@ def query(table):
         conn.close()
     return(x)
 
+# =============================================================================
+# trả df các bảng cashflow, tong_diennuoc, chikhac
+# =============================================================================
 def querydf(table):
     import pandas as pd
     import sqlite3
@@ -273,7 +281,7 @@ def update(table, object_address, value_update):
         conn.close()
 
 # =============================================================================
-# creating db file by import direct from json: price, room, tenant
+# creating db file by import direct from json: price, room, tenant. auto delete if exists
 # =============================================================================
 def import_json():
     import json
@@ -324,7 +332,7 @@ def import_json():
 # =============================================================================
 # insert water and electricity consumed
 # =============================================================================
-def dien_nuoc():
+def diennuoc():
     from datetime import datetime
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
@@ -371,7 +379,7 @@ def pay():
     update('rooms', f'{this_month}.{room}.payment', payment)
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
-    run(1) # (1) to avoid asking month
+    tinhtien(1) # (1) to avoid asking month
     doanhthu()
 
 # =============================================================================
@@ -867,7 +875,7 @@ def doanhthu():
 
 # =============================================================================
 # Nhập số tiền chi điện nước
-# tong_diennuoc(month, so_dien, so_nuoc, tien_dien, tien_nuoc)
+# tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc)
 # =============================================================================
 def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     safe_mount_drive()
@@ -914,16 +922,16 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     conn.commit()
     conn.close()
     print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
-    run(1)
+    tinhtien(1)
     print("Đã cập nhật giá vào room")
     doanhthu()
     
 
 # =============================================================================
 # Nhập số tiền chi ra khác
-# chi_khac('30/06/2025', "Chuyển tiền sang thấu chi", 5000000, "")
+# chi_khac('dd/mm/yyyy', "Chuyển tiền sang thấu chi", 5000000, "")
 # =============================================================================
-def chi_khac(date, noidung_chi, sotien_chi, ghichu):
+def chikhac(date, noidung_chi, sotien_chi, ghichu):
     safe_mount_drive()
     import sqlite3
     conn = sqlite3.connect(db_file)
