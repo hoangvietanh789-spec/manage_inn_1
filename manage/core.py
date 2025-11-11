@@ -99,8 +99,8 @@ def tinhtien(*month_input):
         payment = info["payment"] or 0
         prepayment = info['prepayment'] or 0
 
-        bill += electric_fee if electric_fee >= 0 else bill
-        bill +=  water_fee if water_fee >= 0 else bill
+        bill = bill + electric_fee if electric_fee >= 0 else bill
+        bill = bill +  water_fee if water_fee >= 0 else bill
         if bill <= prepayment:
             due_amount = 0
         elif bill > prepayment:
@@ -156,7 +156,8 @@ def tinhtien(*month_input):
     - Tiền điện: {info["electric_fee"]:,.0f} = ({info["electric_end"]:,.0f} - {info["electric_start"]:,.0f}) * {electric_price:,.0f}đ/kWh
     - Tiền nước: {info["water_fee"]:,.0f} = ({info["water_end"]:,.0f} - {info["water_start"]:,.0f}) * {water_price:,.0f}đ/m3
     - Đã thanh toán/trả trước: {info["payment"]:,.0f}
-    - Còn thiếu: {info["due_amount"]:,.0f}"""
+    - Còn thiếu: {info["due_amount"]:,.0f}
+    Số tài khoản: 106000316181 - Vietinbank - Hoàng Việt Anh"""
             })
             
     import pandas as pd
