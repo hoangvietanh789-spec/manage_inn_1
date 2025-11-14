@@ -292,15 +292,19 @@ def import_json():
     with open(file_price) as file:
         price = json.loads(file.read())
     with open(file_room, "r") as f:
-            room = json.loads(f.read())
+        room = json.loads(f.read())
     with open(file_tenant, "r") as f:
-            tenant = json.loads(f.read())
+        tenant = json.loads(f.read())
+    with open(file_accounts, "r") as f:
+        accounts = json.loads(f.read())
 
     conn = sqlite3.connect("/content/drive/MyDrive/Dau_tu/data/inn.db")
     cursor = conn.cursor()
+
     cursor.execute("DROP TABLE IF EXISTS rooms")
     cursor.execute("DROP TABLE IF EXISTS prices")
     cursor.execute("DROP TABLE IF EXISTS tenants")
+    cursor.execute("DROP TABLE IF EXISTS accounts")
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS rooms (
@@ -328,6 +332,16 @@ def import_json():
     """)
     cursor.execute("INSERT INTO tenants (data) VALUES (?)", (json.dumps(tenant),))
     conn.commit()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS accounts (
+        id INTEGER PRIMARY KEY,
+        data JSON
+    )
+    """)
+    cursor.execute("INSERT INTO accounts (data) VALUES (?)", (json.dumps(accounts),))
+    conn.commit()
+
     conn.close()
 
 # =============================================================================
