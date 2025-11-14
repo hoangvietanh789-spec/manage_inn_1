@@ -286,6 +286,56 @@ def update(table, object_address, value_update):
     finally:
         conn.close()
 
+
+
+def account_trans(account, *new_trans):
+    from datetime import datetime
+    import time
+    today = datetime.now()
+    timeStamp = time.time()
+    this_month = datetime.strftime(today, '%Y%m')
+    list_key = ['amount','date','last_balance','os_balance','pay_for','pay_type','remark']
+    set_key = set(list_key)
+    if len(new_trans) != 0:
+        if set_key - set(new_trans.keys()) != set():
+            print('thiếu',set_key - set(new_trans.keys()))
+            return
+    # else:
+    #     new_trans = {}
+    #     for i in list_key:
+    #         new_trans[i] = input(f"{i}: ")   
+
+
+    patch = {
+        "active": {
+            account: {
+                "transaction": {
+                    this_month: {
+                        timeStamp: new_trans
+                    }
+                }
+            }
+        }
+    }
+
+    
+    import sqlite3
+    import json
+    safe_mount_drive()
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                            UPDATE accounts
+                            SET data = json_patch(data, ?)
+                            WHERE id = 1
+                        """, (json.dumps(patch),))
+        conn.commit()
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()
+
 # =============================================================================
 # creating db file by import direct from json: price, room, tenant. auto delete if exists
 # =============================================================================
