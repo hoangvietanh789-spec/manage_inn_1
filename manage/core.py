@@ -290,8 +290,9 @@ def update(table, object_address, value_update):
 
 def account_trans(account, *new_trans):
     from datetime import datetime
+    from zoneinfo import ZoneInfo
     import time
-    today = datetime.now()
+    today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
     timeStamp = time.time()
     this_month = datetime.strftime(today, '%Y%m')
     list_key = ['amount','date','last_balance','os_balance','pay_for','pay_type','remark']
@@ -318,8 +319,6 @@ def account_trans(account, *new_trans):
             }
         }
     }
-
-    
     import sqlite3
     import json
     safe_mount_drive()
@@ -331,6 +330,26 @@ def account_trans(account, *new_trans):
                             SET data = json_patch(data, ?)
                             WHERE id = 1
                         """, (json.dumps(patch),))
+        conn.commit()
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()
+
+
+
+def delete_transaction(account, , month, trans_id)
+    import sqlite3
+    import json
+    safe_mount_drive()
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(f"""
+                            UPDATE accounts
+                            SET data = json_remove(data, '$.active.{account}.transaction.{month}.{trans_id}')
+                            WHERE id = 1;
+                        """)
         conn.commit()
     except Exception as ex:
         print(ex)
