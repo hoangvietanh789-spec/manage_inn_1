@@ -340,16 +340,17 @@ def account_trans(account, *new_trans):
 
 def delete_transaction(account, month, trans_id):
     import sqlite3
-    import json
     safe_mount_drive()
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     try:
+        # JSON path an toàn: quote các key
+        path = f'$.active."{account}".transaction."{month}"."{trans_id}"'
         cursor.execute(f"""
-                            UPDATE accounts
-                            SET data = json_remove(data, '$.active.{account}.transaction.{month}.{trans_id}')
-                            WHERE id = 1;
-                        """)
+            UPDATE accounts
+            SET data = json_remove(data, ?)
+            WHERE id = 1;
+        """, (path,))
         conn.commit()
     except Exception as ex:
         print(ex)
