@@ -2,9 +2,11 @@ db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
 file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
 file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
 file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
+file_account = "/content/drive/MyDrive/Dau_tu/data/accounts.json"
 file_cashbanoi = "/content/drive/MyDrive/Dau_tu/report/cash_banoi.xlsx"
 file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
 file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
+
 
 def brief():
     from datetime import datetime
@@ -56,7 +58,8 @@ def tinhtien(*month_input):
         print("Chưa có hóa đơn tổng điện nước tháng này")
         return
 
-    tenant = query('tenants')    
+    tenant = query('tenants')
+    account = query('accounts')
 
     price = query('prices')
     electric_price = price[this_month]['electric_price']
@@ -219,8 +222,10 @@ def tinhtien(*month_input):
         json.dump(price, f, ensure_ascii=False, indent=4)
     with open(file_tenant, "w", encoding="utf-8") as f:
         json.dump(tenant, f, ensure_ascii=False, indent=4)
+    with open(file_account, "w", encoding="utf-8") as f:
+        json.dump(account, f, ensure_ascii=False, indent=4)
 
-    print("✅ created rent_report.xlsx,room.json,price.json,tenant.json")
+    print("✅ created rent_report.xlsx,room.json,price.json,tenant.json,account.json")
 
 # =============================================================================
 # gen link webpage
