@@ -300,7 +300,7 @@ def import_json():
         room = json.loads(f.read())
     with open(file_tenant, "r") as f:
         tenant = json.loads(f.read())
-    with open(file_accounts, "r") as f:
+    with open(file_account, "r") as f:
         accounts = json.loads(f.read())
 
     conn = sqlite3.connect("/content/drive/MyDrive/Dau_tu/data/inn.db")
