@@ -338,7 +338,7 @@ def account_trans(account, *new_trans):
 
 
 
-def delete_transaction(account, , month, trans_id)
+def delete_transaction(account, month, trans_id)
     import sqlite3
     import json
     safe_mount_drive()
