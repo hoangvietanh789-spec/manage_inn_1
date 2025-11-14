@@ -297,6 +297,7 @@ def account_trans(account, *new_trans):
     list_key = ['amount','date','last_balance','os_balance','pay_for','pay_type','remark']
     set_key = set(list_key)
     if len(new_trans) != 0:
+        new_trans = new_trans[0]
         if set_key - set(new_trans.keys()) != set():
             print('thiếu',set_key - set(new_trans.keys()))
             return
