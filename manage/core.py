@@ -307,7 +307,7 @@ def account_trans(account, *new_trans):
     #     for i in list_key:
     #         new_trans[i] = input(f"{i}: ")   
 
-
+	
     patch = {
         "active": {
             account: {
@@ -369,7 +369,13 @@ def delete_transaction(account, month, trans_id):
         print(ex)
     finally:
         conn.close()
-
+def reverse_transaction(trans_id):
+    accounts = query("accounts")['active']
+    for account in accounts:
+        for month in account['transaction']:
+    		if trans_id in month:
+                delete_transaction(account, month, trans_id)
+	
 # =============================================================================
 # creating db file by import direct from json: price, room, tenant. auto delete if exists
 # =============================================================================
