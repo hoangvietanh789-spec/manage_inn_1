@@ -336,11 +336,24 @@ def account_trans(account, *new_trans):
     finally:
         conn.close()
 
-
-
 def delete_transaction(account, month, trans_id):
     import sqlite3
     safe_mount_drive()
+    account_type = query("accounts")['active'][account]['account_type']
+    os_balance = query("accounts")['active'][account]['os_balance']
+    pay_type = query("accounts")['active'][account]['transaction'][month]['trans_id']['pay_type']
+    pay_for = query("accounts")['active'][account]['transaction'][month]['trans_id']['pay_for']
+    amount = query("accounts")['active'][account]['transaction'][month]['trans_id']['amount']
+    if account_type in ['loan', 'overdraft']:
+       	if pay_type == 'credit':
+     	   os_balance -= amount
+    	elif pay_type == 'debit' and pay_for == 'principal':
+    		os_balance += amount 
+    elif account_type == 'dda':
+        if pay_type == 'credit':
+            os_balance -= amount
+        elif pay_type == 'debit':
+            os_balance += amount 
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
     try:
