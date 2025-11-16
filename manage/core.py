@@ -358,7 +358,7 @@ def delete_transaction(account, month, trans_id):
        	if pay_type == 'credit':
      	   os_balance -= amount
         elif pay_type == 'debit' and pay_for == 'principal':
-    		os_balance += amount 
+            os_balance += amount 
     elif account_type == 'dda':
         if pay_type == 'credit':
             os_balance -= amount
