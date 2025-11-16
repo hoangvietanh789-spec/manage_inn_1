@@ -1184,7 +1184,6 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     if gia_nuoc > water_price:
         update('prices', f'{month}.water_price', gia_nuoc)
 
-
     cursor.execute("""
         INSERT INTO tong_diennuoc (Month, So_dien, Tien_dien, Gia_dien, So_nuoc, Tien_nuoc, Gia_nuoc, month_water_el)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -1203,6 +1202,7 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     tinhtien(1)
     print("Đã cập nhật giá vào room")
     doanhthu()
+
     
 
 # =============================================================================
