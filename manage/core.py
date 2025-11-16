@@ -342,13 +342,13 @@ def chikhac1():
         print('amount = 0')
         return
     date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
     try:
-        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
     timeStamp = time.time()
     add_trans('vietinbank', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
@@ -361,13 +361,13 @@ def thauchi_u():
         print('amount = 0')
         return
     date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
     try:
-        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
     timeStamp = time.time()
     add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
@@ -380,13 +380,13 @@ def thauchi_s():
         print('amount = 0')
         return
     date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
     try:
-        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
     timeStamp = time.time()
     add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
@@ -402,13 +402,13 @@ def tranomon():
         print("no payment")
         return
     date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
     try:
-        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
     timeStamp = time.time()
@@ -436,13 +436,13 @@ def trathauchi_u():
         print("no payment")
         return
     date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
     try:
-        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
     timeStamp = time.time()
@@ -470,13 +470,13 @@ def trathauchi_s():
         print("no payment")
         return
     date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
     try:
-        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
     timeStamp = time.time()
