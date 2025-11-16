@@ -287,30 +287,30 @@ def update(table, object_address, value_update):
         conn.close()
 
 
-
-def add_trans(account, timeStamp, *new_trans):
+def add_trans(account, month, timeStamp, *new_trans):
     from datetime import datetime
     from zoneinfo import ZoneInfo
     import time
-    today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    # timeStamp = time.time()
-    this_month = datetime.strftime(today, '%Y%m')
-    list_key = ['amount','date','last_balance','os_balance','pay_for','pay_type','remark']
+    # today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    list_key = ['amount','date','pay_for','pay_type','remark']
     set_key = set(list_key)
     if len(new_trans) != 0:
         new_trans = new_trans[0]
         if set_key - set(new_trans.keys()) != set():
             print('thiếu',set_key - set(new_trans.keys()))
             return
-    # else:
-    #     new_trans = {}
-    #     for i in list_key:
-    #         new_trans[i] = input(f"{i}: ") 
+    accounts = query('accounts')['active']
+    acct = accounts[account]
+    last_balance = acct['os_balance']
+    os_balance = last_balance + amount if new_trans['pay_type'] == "credit" else last_balance - amount if new_trans['pay_for'] == 'principal' else last_balance
+    new_trans['last_balance'] = last_balance
+    new_trans['os_balance'] = os_balance
+    update("accounts",f'active.{account}.os_balance', os_balance)
     patch = {
         "active": {
             account: {
                 "transaction": {
-                    this_month: {
+                    month: {
                         timeStamp: new_trans
                     }
                 }
@@ -333,40 +333,159 @@ def add_trans(account, timeStamp, *new_trans):
         print(ex)
     finally:
         conn.close()
-def account_trans():
+
+def chikhac1():
     from datetime import datetime
     import time
-    accounts = query('accounts')['active']
-    account_list = list(accounts.keys())
-    ask_text = "\n".join(f"{i+1}. {x}" for i, x in enumerate(account_list))
-    account = accounts[account_list[int(input(ask_text + "\n"))-1]]
-    last_balance = account['os_balance']
     amount = int(input('amount: '))
     date = input('dd/mm/yyyy: ')
     try:
-        datetime.strptime(date, 'dd/mm/yyyy')
+        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
     date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
-    ask_text = "payfor:\n1. principal\n2. interest\n3. else\n"
-    pay_for = {'1':'principal','2':'interest','3':'else'}[input(ask_text)]
-    ask_text = "paytype:\n1. credit\n2. debit\n"
-    pay_type = {'1':'credit','2':'debit'}input(ask_text)
+    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    remark = input("remark: ")
+    else:
+    timeStamp = time.time()
+    add_trans('vietinbank', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+
+def thauchi_u():
+    from datetime import datetime
+    import time
+    amount = int(input('amount: '))
+    date = input('dd/mm/yyyy: ')
+    try:
+        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    remark = input("remark: ")
+    else:
+    timeStamp = time.time()
+    add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
+
+def thauchi_s():
+    from datetime import datetime
+    import time
+    amount = int(input('amount: '))
+    date = input('dd/mm/yyyy: ')
+    try:
+        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    remark = input("remark: ")
+    else:
+    timeStamp = time.time()
+    add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
+
+def tranomon():
+    from datetime import datetime
+    import time
+    interest = input('interest: ')
+    interest = int(interest) if interest != '' else 0
+    principal = input('principal: ')
+    principal = int(principal) if principal != '' else 0
+    if interest + principal == 0:
+        print("no payment")
+        return
+    date = input('dd/mm/yyyy: ')
+    try:
+        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
     timeStamp = time.time()
-    os_balance = last_balance + amount if pay_type == "credit" else last_balance - amount if pay_for == 'principal' else last_balance
-    add_trans(account, timeStamp, {"amount": amount,"date": date,"last_balance": last_balance,"os_balance": os_balance,"pay_for": pay_for,"pay_type": pay_type,"remark": remark})
-    update("accounts",f'active.{account}.os_balance', os_balance)
+    if source == 'v':
+        if principal != 0:
+            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    else:
+        if principal != 0:
+            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
 
-def chikhac1():
-    pass
-def thauchi():
-    pass
-def trano():
-    pass
+def trathauchi_u():
+    from datetime import datetime
+    import time
+    interest = input('interest: ')
+    interest = int(interest) if interest != '' else 0
+    principal = input('principal: ')
+    principal = int(principal) if principal != '' else 0
+    if interest + principal == 0:
+        print("no payment")
+        return
+    date = input('dd/mm/yyyy: ')
+    try:
+        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    source = input("[v] = vietinbank / Enter = bidv: ")
+    remark = input("remark: ")
+    timeStamp = time.time()
+    if source == 'v':
+        if principal != 0:
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    else:
+        if principal != 0:
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
 
-
+def trathauchi_s():
+    from datetime import datetime
+    import time
+    interest = input('interest: ')
+    interest = int(interest) if interest != '' else 0
+    principal = input('principal: ')
+    principal = int(principal) if principal != '' else 0
+    if interest + principal == 0:
+        print("no payment")
+        return
+    date = input('dd/mm/yyyy: ')
+    try:
+        month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
+    source = input("[v] = vietinbank / Enter = bidv: ")
+    remark = input("remark: ")
+    timeStamp = time.time()
+    if source == 'v':
+        if principal != 0:
+            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    else:
+        if principal != 0:
+            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
 
 def delete_transaction(account, month, trans_id):
     import sqlite3
