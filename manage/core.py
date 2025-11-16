@@ -536,6 +536,7 @@ def delete_transaction(account, month, trans_id):
         print(ex)
     finally:
         conn.close()
+    update("accounts",f'active.{account}.os_balance', os_balance)
 def reverse_transaction(trans_id):
     accounts = query("accounts")['active']
     for account in list(accounts.keys()):
