@@ -538,10 +538,9 @@ def delete_transaction(account, month, trans_id):
         conn.close()
 def reverse_transaction(trans_id):
     accounts = query("accounts")['active']
-    account_list = list(accounts.keys())
-    for account in account_list:
-        for month in accounts[account]['transaction']:
-            if trans_id in accounts[account]['transaction']['month']:
+    for account in list(accounts.keys()):
+        for month in list(accounts[account]['transaction'].keys()):
+            if trans_id in list(accounts[account]['transaction'][month].keys()):
                 delete_transaction(account, month, trans_id)
 	
 # =============================================================================
