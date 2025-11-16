@@ -540,7 +540,7 @@ def reverse_transaction(trans_id):
     accounts = query("accounts")['active']
     for account in accounts:
         for month in account['transaction']:
-            if trans_id in month:
+            if trans_id in account['transaction']['month']:
                 delete_transaction(account, month, trans_id)
 	
 # =============================================================================
