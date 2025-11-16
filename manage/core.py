@@ -302,7 +302,11 @@ def add_trans(account, month, timeStamp, *new_trans):
     accounts = query('accounts')['active']
     acct = accounts[account]
     last_balance = acct['os_balance']
-    os_balance = last_balance + new_trans['amount'] if new_trans['pay_type'] == "credit" else last_balance - new_trans['amount'] if new_trans['pay_for'] == 'principal' else last_balance
+    account_type = acct['account_type']
+    if account_type == 'dda':
+        os_balance = last_balance + new_trans['amount'] if new_trans['pay_type'] == "credit" else last_balance - new_trans['amount']
+    elif account_type in ['loan', 'overdraft']:
+        os_balance = last_balance + new_trans['amount'] if new_trans['pay_type'] == "credit" else last_balance - new_trans['amount'] if new_trans['pay_for'] == 'principal' else last_balance
     new_trans['last_balance'] = last_balance
     new_trans['os_balance'] = os_balance
     update("accounts",f'active.{account}.os_balance', os_balance)
