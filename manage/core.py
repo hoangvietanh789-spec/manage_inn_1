@@ -508,9 +508,9 @@ def delete_transaction(account, month, trans_id):
     safe_mount_drive()
     account_type = query("accounts")['active'][account]['account_type']
     os_balance = query("accounts")['active'][account]['os_balance']
-    pay_type = query("accounts")['active'][account]['transaction'][month]['trans_id']['pay_type']
-    pay_for = query("accounts")['active'][account]['transaction'][month]['trans_id']['pay_for']
-    amount = query("accounts")['active'][account]['transaction'][month]['trans_id']['amount']
+    pay_type = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_type']
+    pay_for = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_for']
+    amount = query("accounts")['active'][account]['transaction'][month][trans_id]['amount']
     if account_type in ['loan', 'overdraft']:
        	if pay_type == 'credit':
      	   os_balance -= amount
