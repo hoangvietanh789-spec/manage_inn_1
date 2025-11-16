@@ -338,6 +338,9 @@ def chikhac1():
     from datetime import datetime
     import time
     amount = int(input('amount: '))
+    if amount == 0:
+        print('amount = 0')
+        return
     date = input('dd/mm/yyyy: ')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
@@ -347,7 +350,6 @@ def chikhac1():
     date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     remark = input("remark: ")
-    else:
     timeStamp = time.time()
     add_trans('vietinbank', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
 
@@ -355,6 +357,9 @@ def thauchi_u():
     from datetime import datetime
     import time
     amount = int(input('amount: '))
+    if amount == 0:
+        print('amount = 0')
+        return
     date = input('dd/mm/yyyy: ')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
@@ -372,6 +377,9 @@ def thauchi_s():
     from datetime import datetime
     import time
     amount = int(input('amount: '))
+    if amount == 0:
+        print('amount = 0')
+        return
     date = input('dd/mm/yyyy: ')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
