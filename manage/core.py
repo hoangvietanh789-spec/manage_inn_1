@@ -369,7 +369,6 @@ def thauchi_u():
     date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     remark = input("remark: ")
-    else:
     timeStamp = time.time()
     add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
 
@@ -389,7 +388,6 @@ def thauchi_s():
     date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     remark = input("remark: ")
-    else:
     timeStamp = time.time()
     add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
 
