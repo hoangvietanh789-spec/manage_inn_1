@@ -383,8 +383,8 @@ def reverse_transaction(trans_id):
     accounts = query("accounts")['active']
     for account in accounts:
         for month in account['transaction']:
-			if trans_id in month:
-				delete_transaction(account, month, trans_id)
+            if trans_id in month:
+                delete_transaction(account, month, trans_id)
 	
 # =============================================================================
 # creating db file by import direct from json: price, room, tenant. auto delete if exists
