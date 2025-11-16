@@ -48,7 +48,7 @@ def tinhtien(*month_input):
     import json
     import pandas as pd
     from datetime import datetime
-
+	
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
 
@@ -405,7 +405,7 @@ def reverse_transaction(trans_id):
     accounts = query("accounts")['active']
     for account in accounts:
         for month in account['transaction']:
-    		if trans_id in month:
+            if trans_id in month:
                 delete_transaction(account, month, trans_id)
 	
 # =============================================================================
