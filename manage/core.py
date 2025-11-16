@@ -342,12 +342,12 @@ def chikhac1():
         print('amount = 0')
         return
     date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     remark = input("remark: ")
     timeStamp = time.time()
@@ -361,12 +361,12 @@ def thauchi_u():
         print('amount = 0')
         return
     date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     remark = input("remark: ")
     timeStamp = time.time()
@@ -380,12 +380,12 @@ def thauchi_s():
         print('amount = 0')
         return
     date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     remark = input("remark: ")
     timeStamp = time.time()
@@ -402,12 +402,12 @@ def tranomon():
         print("no payment")
         return
     date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
@@ -436,12 +436,12 @@ def trathauchi_u():
         print("no payment")
         return
     date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
@@ -470,12 +470,12 @@ def trathauchi_s():
         print("no payment")
         return
     date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     try:
         month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     except Exception as ex:
         print(ex)
         return
-    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
     month = datetime.strftime(datetime.strptime(date, 'dd/mm/yyyy'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
