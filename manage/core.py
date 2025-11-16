@@ -288,12 +288,12 @@ def update(table, object_address, value_update):
 
 
 
-def account_trans(account, *new_trans):
+def add_trans(account, timeStamp, *new_trans):
     from datetime import datetime
     from zoneinfo import ZoneInfo
     import time
     today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    timeStamp = time.time()
+    # timeStamp = time.time()
     this_month = datetime.strftime(today, '%Y%m')
     list_key = ['amount','date','last_balance','os_balance','pay_for','pay_type','remark']
     set_key = set(list_key)
@@ -305,9 +305,7 @@ def account_trans(account, *new_trans):
     # else:
     #     new_trans = {}
     #     for i in list_key:
-    #         new_trans[i] = input(f"{i}: ")   
-
-	
+    #         new_trans[i] = input(f"{i}: ") 
     patch = {
         "active": {
             account: {
@@ -335,6 +333,18 @@ def account_trans(account, *new_trans):
         print(ex)
     finally:
         conn.close()
+def account_trans():
+    account_list = list(query('accounts')['active'].keys())
+
+
+def chikhac1():
+    pass
+def thauchi():
+    pass
+def trano():
+    pass
+
+
 
 def delete_transaction(account, month, trans_id):
     import sqlite3
@@ -347,7 +357,7 @@ def delete_transaction(account, month, trans_id):
     if account_type in ['loan', 'overdraft']:
        	if pay_type == 'credit':
      	   os_balance -= amount
-    	elif pay_type == 'debit' and pay_for == 'principal':
+        elif pay_type == 'debit' and pay_for == 'principal':
     		os_balance += amount 
     elif account_type == 'dda':
         if pay_type == 'credit':
