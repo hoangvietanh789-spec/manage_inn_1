@@ -334,8 +334,30 @@ def add_trans(account, timeStamp, *new_trans):
     finally:
         conn.close()
 def account_trans():
-    account_list = list(query('accounts')['active'].keys())
-
+    from datetime import datetime
+    import time
+    accounts = query('accounts')['active']
+    account_list = list(accounts.keys())
+    ask_text = "\n".join(f"{i+1}. {x}" for i, x in enumerate(account_list))
+    account = accounts[account_list[int(input(ask_text + "\n"))-1]]
+    last_balance = account['os_balance']
+    amount = int(input('amount: '))
+    date = input('dd/mm/yyyy: ')
+    try:
+        datetime.strptime(date, 'dd/mm/yyyy')
+    except Exception as ex:
+        print(ex)
+        return
+    date = date if date != '' else datetime.strftime(datetime.now(), 'dd/mm/yyyy')
+    ask_text = "payfor:\n1. principal\n2. interest\n3. else\n"
+    pay_for = {'1':'principal','2':'interest','3':'else'}[input(ask_text)]
+    ask_text = "paytype:\n1. credit\n2. debit\n"
+    pay_type = {'1':'credit','2':'debit'}input(ask_text)
+    remark = input("remark: ")
+    timeStamp = time.time()
+    os_balance = last_balance + amount if pay_type == "credit" else last_balance - amount if pay_for == 'principal' else last_balance
+    add_trans(account, timeStamp, {"amount": amount,"date": date,"last_balance": last_balance,"os_balance": os_balance,"pay_for": pay_for,"pay_type": pay_type,"remark": remark})
+    update("accounts",f'active.{account}.os_balance', os_balance)
 
 def chikhac1():
     pass
