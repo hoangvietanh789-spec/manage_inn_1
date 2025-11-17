@@ -892,11 +892,8 @@ def doanhthu():
 # Thêm các giao dịch cụ thể theo từng tài khoản
 # =============================================================================
 def add_trans(account, month, timeStamp, *new_trans):
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
-    import time
     # today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    list_key = ['amount','date','pay_for','pay_type','remark']
+    list_key = ['amount','date','pay_for','pay_type', 'followed','followed_id','remark']
     set_key = set(list_key)
     if len(new_trans) != 0:
         new_trans = new_trans[0]
@@ -941,6 +938,31 @@ def add_trans(account, month, timeStamp, *new_trans):
         print(ex)
     finally:
         conn.close()
+    
+    if new_trans['followed'] == "yes":
+        new_trans['account'] = account
+        new_trans['month'] = month
+        patch = {
+            "followed": {
+                timeStamp: new_trans
+            }
+        }
+        import sqlite3
+        import json
+        safe_mount_drive()
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                                UPDATE accounts
+                                SET data = json_patch(data, ?)
+                                WHERE id = 1
+                            """, (json.dumps(patch),))
+            conn.commit()
+        except Exception as ex:
+            print(ex)
+        finally:
+            conn.close()
 # =============================================================================
 # xóa 01 bản ghi giao dịch
 # =============================================================================
@@ -970,7 +992,7 @@ def delete_transaction(account, month, trans_id):
     try:
         # JSON path an toàn: quote các key
         path = f'$.active."{account}".transaction."{month}"."{trans_id}"'
-        cursor.execute(f"""
+        cursor.execute("""
             UPDATE accounts
             SET data = json_remove(data, ?)
             WHERE id = 1;
@@ -1013,8 +1035,10 @@ def thauchi_u():
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
+    ask_follow = input("followed - Enter = no else yes: ")
+    followed = '' if ask_follow == '' else 'yes'
     timeStamp = time.time()
-    add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
+    add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
 # =============================================================================
 # Tiêu thấu có tài 
 # =============================================================================
@@ -1034,8 +1058,10 @@ def thauchi_s():
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
+    ask_follow = input("followed - Enter = no else yes: ")
+    followed = '' if ask_follow == '' else 'yes'
     timeStamp = time.time()
-    add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
+    add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
 # =============================================================================
 # Trả nợ món 
 # =============================================================================
@@ -1062,20 +1088,20 @@ def tranomon():
     remark = input("remark: ")
     if source == 'v':
         if principal != 0:
-            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, principal, str(timeStamp))
         if interest != 0:
             timeStamp = time.time()
-            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, interest, str(timeStamp))
     else:
         if principal != 0:
-            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
         if interest != 0:
             timeStamp = time.time()
-            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
     doanhthu()
 # =============================================================================
 # Trả nợ thấu chi tín 
@@ -1101,22 +1127,27 @@ def trathauchi_u():
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
+    print(query['accounts']['followed'].keys())
+    followed_id = input("followed_id")
+    if followed_id != '' and followed_id not in list(query['accounts']['followed'].keys()):
+        print(followed_id, "not in followed list")
+        return()
     if source == 'v':
         if principal != 0:
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, principal, str(timeStamp))
         if interest != 0:
             timeStamp = time.time()
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, interest, str(timeStamp))
     else:
         if principal != 0:
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
         if interest != 0:
             timeStamp = time.time()
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
     doanhthu()
 # =============================================================================
 # Trả nợ thấu chi có tài 
@@ -1142,22 +1173,27 @@ def trathauchi_s():
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
+    print(query['accounts']['followed'].keys())
+    followed_id = input("followed_id")
+    if followed_id != '' and followed_id not in list(query['accounts']['followed'].keys()):
+        print(followed_id, "not in followed list")
+        return()
     if source == 'v':
         if principal != 0:
-            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, principal, str(timeStamp))
         if interest != 0:
             timeStamp = time.time()
-            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, interest, str(timeStamp))
     else:
         if principal != 0:
-            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
         if interest != 0:
             timeStamp = time.time()
-            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
            
 # =============================================================================
 # adtrans vào bảng accounts và cập nhật vào bảng chikhac thông qua hàm chikhac1()
@@ -1179,7 +1215,7 @@ def chikhac():
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
     timeStamp = time.time()
-    add_trans('vietinbank', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+    add_trans('vietinbank', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
     chikhac1(date, remark, amount, str(timeStamp))
 # =============================================================================
 # Nhập số tiền chi ra khác
@@ -1258,7 +1294,7 @@ def pay():
     update('rooms', f'{this_month}.{room}.payment', payment)
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
-    add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}"})
+    add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}","followed": "", "followed_id":""})
     tinhtien(1) # (1) to avoid asking month
     doanhthu()
 # =============================================================================
@@ -1338,9 +1374,9 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     conn.commit()
     conn.close()
     if tien_dien > 0:
-        add_trans('vietinbank', month, time.time(), {"amount": tien_dien,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Điện {month}: {so_dien} số"})
+        add_trans('vietinbank', month, time.time(), {"amount": tien_dien,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Điện {month}: {so_dien} số","followed": "", "followed_id":""})
     if tien_nuoc > 0:
-        add_trans('vietinbank', month, time.time(), {"amount": tien_nuoc,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Nước {month}: {so_nuoc} số"})
+        add_trans('vietinbank', month, time.time(), {"amount": tien_nuoc,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Nước {month}: {so_nuoc} số","followed": "", "followed_id":""})
     print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
     tinhtien(1)
     print("Đã cập nhật giá vào room")
