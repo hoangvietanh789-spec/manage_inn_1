@@ -257,6 +257,7 @@ def query(table):
 # trả df các bảng cashflow, tong_diennuoc, chikhac
 # =============================================================================
 def querydf(table):
+	safe_mount_drive()
     import pandas as pd
     import sqlite3
     conn = sqlite3.connect(db_file)
