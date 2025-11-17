@@ -1178,9 +1178,9 @@ def trathauchi_u():
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
-    print(query['accounts']['followed'].keys)
+    print(query('accounts')['followed'].keys)
     followed_id = input("followed_id")
-    if followed_id != '' and followed_id not in list(query['accounts']['followed'].keys()):
+    if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
         print(followed_id, "not in followed list")
         return()
     if source == 'v':
@@ -1224,9 +1224,9 @@ def trathauchi_s():
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
-    print(query['accounts']['followed'].keys)
+    print(query('accounts')['followed'].keys)
     followed_id = input("followed_id")
-    if followed_id != '' and followed_id not in list(query['accounts']['followed'].keys()):
+    if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
         print(followed_id, "not in followed list")
         return()
     if source == 'v':
