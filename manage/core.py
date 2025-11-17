@@ -1035,6 +1035,7 @@ def delete_transaction(account, month, trans_id):
 # reserve lại 01 giao dịch bằng cách tìm và xóa các trans_id trong tất cả các tài khoản
 # =============================================================================
 def reverse_transaction(trans_id):
+    import sqlite3
     accounts = query("accounts")['active']
     for account in list(accounts.keys()):
         for month in list(accounts[account]['transaction'].keys()):
