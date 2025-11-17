@@ -1042,6 +1042,7 @@ def reverse_transaction(trans_id):
             if trans_id in list(accounts[account]['transaction'][month].keys()):
                 delete_transaction(account, month, trans_id)
     tran_ids = query("accounts")['followed']
+    trans_id = str(trans_id)
     for id_tr in list(tran_ids.keys()):
         if id_tr == trans_id:
             conn = sqlite3.connect(db_file)
