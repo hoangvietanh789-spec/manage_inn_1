@@ -942,6 +942,59 @@ def add_trans(account, month, timeStamp, *new_trans):
     finally:
         conn.close()
 # =============================================================================
+# xóa 01 bản ghi giao dịch
+# =============================================================================
+def delete_transaction(account, month, trans_id):
+    import sqlite3
+    safe_mount_drive()
+    if account not in list(query("accounts")['active'].keys()) or month not in list(query("accounts")['active'][account]['transaction'].keys()) or trans_id not in list(query("accounts")['active'][account]['transaction'][month].keys()):
+        print(account, month, trans_id, "data not found")
+        return
+    account_type = query("accounts")['active'][account]['account_type']
+    os_balance = query("accounts")['active'][account]['os_balance']
+    pay_type = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_type']
+    pay_for = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_for']
+    amount = query("accounts")['active'][account]['transaction'][month][trans_id]['amount']
+    if account_type in ['loan', 'overdraft']:
+       	if pay_type == 'credit':
+     	   os_balance -= amount
+        elif pay_type == 'debit' and pay_for == 'principal':
+            os_balance += amount 
+    elif account_type == 'dda':
+        if pay_type == 'credit':
+            os_balance -= amount
+        elif pay_type == 'debit':
+            os_balance += amount 
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    try:
+        # JSON path an toàn: quote các key
+        path = f'$.active."{account}".transaction."{month}"."{trans_id}"'
+        cursor.execute(f"""
+            UPDATE accounts
+            SET data = json_remove(data, ?)
+            WHERE id = 1;
+        """, (path,))
+        conn.commit()
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()
+    update("accounts",f'active.{account}.os_balance', os_balance)
+# =============================================================================
+# reserve lại 01 giao dịch bằng cách tìm và xóa các trans_id trong tất cả các tài khoản
+# =============================================================================
+def reverse_transaction(trans_id):
+    accounts = query("accounts")['active']
+    for account in list(accounts.keys()):
+        for month in list(accounts[account]['transaction'].keys()):
+            if trans_id in list(accounts[account]['transaction'][month].keys()):
+                delete_transaction(account, month, trans_id)
+                
+                
+                
+                
+# =============================================================================
 # Tiêu thấu chi tín chấp 
 # =============================================================================
 def thauchi_u():
@@ -1023,6 +1076,7 @@ def tranomon():
         if interest != 0:
             timeStamp = time.time()
             add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    doanhthu()
 # =============================================================================
 # Trả nợ thấu chi tín 
 # =============================================================================
@@ -1063,6 +1117,7 @@ def trathauchi_u():
         if interest != 0:
             timeStamp = time.time()
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    doanhthu()
 # =============================================================================
 # Trả nợ thấu chi có tài 
 # =============================================================================
@@ -1103,57 +1158,7 @@ def trathauchi_s():
         if interest != 0:
             timeStamp = time.time()
             add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-            
-# =============================================================================
-# xóa 01 bản ghi giao dịch
-# =============================================================================
-def delete_transaction(account, month, trans_id):
-    import sqlite3
-    safe_mount_drive()
-    if account not in list(query("accounts")['active'].keys()) or month not in list(query("accounts")['active'][account]['transaction'].keys()) or trans_id not in list(query("accounts")['active'][account]['transaction'][month].keys()):
-        print(account, month, trans_id, "data not found")
-        return
-    account_type = query("accounts")['active'][account]['account_type']
-    os_balance = query("accounts")['active'][account]['os_balance']
-    pay_type = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_type']
-    pay_for = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_for']
-    amount = query("accounts")['active'][account]['transaction'][month][trans_id]['amount']
-    if account_type in ['loan', 'overdraft']:
-       	if pay_type == 'credit':
-     	   os_balance -= amount
-        elif pay_type == 'debit' and pay_for == 'principal':
-            os_balance += amount 
-    elif account_type == 'dda':
-        if pay_type == 'credit':
-            os_balance -= amount
-        elif pay_type == 'debit':
-            os_balance += amount 
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    try:
-        # JSON path an toàn: quote các key
-        path = f'$.active."{account}".transaction."{month}"."{trans_id}"'
-        cursor.execute(f"""
-            UPDATE accounts
-            SET data = json_remove(data, ?)
-            WHERE id = 1;
-        """, (path,))
-        conn.commit()
-    except Exception as ex:
-        print(ex)
-    finally:
-        conn.close()
-    update("accounts",f'active.{account}.os_balance', os_balance)
-# =============================================================================
-# reserve lại 01 giao dịch bằng cách tìm và xóa các trans_id trong tất cả các tài khoản
-# =============================================================================
-def reverse_transaction(trans_id):
-    accounts = query("accounts")['active']
-    for account in list(accounts.keys()):
-        for month in list(accounts[account]['transaction'].keys()):
-            if trans_id in list(accounts[account]['transaction'][month].keys()):
-                delete_transaction(account, month, trans_id)
-
+           
 # =============================================================================
 # adtrans vào bảng accounts và cập nhật vào bảng chikhac thông qua hàm chikhac1()
 # =============================================================================
@@ -1224,7 +1229,7 @@ def xoa_chi_khac(record_id):
     conn.close()
     print(f"Đã xóa bản ghi id={record_id} trong bảng chikhac")
     reverse_transaction(trans_id)
-
+    doanhthu()
 # =============================================================================
 # insert customer payment
 # =============================================================================
@@ -1253,9 +1258,9 @@ def pay():
     update('rooms', f'{this_month}.{room}.payment', payment)
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
+    add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}"})
     tinhtien(1) # (1) to avoid asking month
     doanhthu()
-    add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}"})
 # =============================================================================
 # Hủy các giao dịch thanh toán tiền trọ của người trọ
 # =============================================================================
@@ -1277,12 +1282,13 @@ def unpay():
         return
     update('rooms', f'{month}.{room}.payment', 0)
     update('rooms', f'{month}.{room}.payment_date', "")
-    tinhtien(1) # (1) to avoid asking month
-    doanhthu()
     trans = query('accounts')['active']['vietinbank']['transaction'][month]
     for tran in trans:
         if trans[tran]['remark'] == f"{room} pay {month}":
             reverse_transaction(tran)
+    tinhtien(1) # (1) to avoid asking month
+    doanhthu()
+    
 # =============================================================================
 # Nhập số tiền chi điện nước
 # tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc)
@@ -1331,11 +1337,11 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     """, (month, so_dien, tien_dien, gia_dien, so_nuoc, tien_nuoc, gia_nuoc, month_water_el))
     conn.commit()
     conn.close()
-    print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
-    tinhtien(1)
-    print("Đã cập nhật giá vào room")
-    doanhthu()
     if tien_dien > 0:
         add_trans('vietinbank', month, time.time(), {"amount": tien_dien,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Điện {month}: {so_dien} số"})
     if tien_nuoc > 0:
         add_trans('vietinbank', month, time.time(), {"amount": tien_nuoc,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Nước {month}: {so_nuoc} số"})
+    print(f"Đã lưu tháng {month}: Giá điện {gia_dien:,} đ/kWh, Giá nước {gia_nuoc:,} đ/m³")
+    tinhtien(1)
+    print("Đã cập nhật giá vào room")
+    doanhthu()
