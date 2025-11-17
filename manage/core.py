@@ -1011,10 +1011,12 @@ def tranomon():
         if principal != 0:
             add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
             add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            chikhac1(date, remark, principal, str(timeStamp))
         if interest != 0:
             timeStamp = time.time()
             add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
             add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            chikhac1(date, remark, interest, str(timeStamp))
     else:
         if principal != 0:
             add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
@@ -1049,10 +1051,12 @@ def trathauchi_u():
         if principal != 0:
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
             add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            chikhac1(date, remark, principal, str(timeStamp))
         if interest != 0:
             timeStamp = time.time()
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
             add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            chikhac1(date, remark, interest, str(timeStamp))
     else:
         if principal != 0:
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
@@ -1087,10 +1091,12 @@ def trathauchi_s():
         if principal != 0:
             add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
             add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            chikhac1(date, remark, principal, str(timeStamp))
         if interest != 0:
             timeStamp = time.time()
             add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
             add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            chikhac1(date, remark, interest, str(timeStamp))
     else:
         if principal != 0:
             add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
