@@ -964,8 +964,7 @@ def add_trans(account, month, timeStamp, *new_trans):
             print(ex)
         finally:
             conn.close()
-    
-    if new_trans['followed'] == "other_from_salary":
+    elif new_trans['followed'] == "other_from_salary":
         new_trans2 = new_trans.copy()
         new_trans2['month'] = month
         patch = {
@@ -1064,8 +1063,9 @@ def thauchi_u():
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
-    ask_follow = input("followed - Enter = no else yes: ")
-    followed = '' if ask_follow == '' else 'yes'
+    ask_follow = input("followed - Enter = no\n1.yes\n2.other_from_salary\n")
+    ask_follow = '3' if ask_follow == '' else ask_follow
+    followed = {"3":"", "1":"yes", "2":"other_from_salary"}[ask_follow]
     timeStamp = time.time()
     add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
 # =============================================================================
@@ -1087,8 +1087,9 @@ def thauchi_s():
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
-    ask_follow = input("followed - Enter = no else yes: ")
-    followed = '' if ask_follow == '' else 'yes'
+    ask_follow = input("followed - Enter = no\n1.yes\n2.other_from_salary\n")
+    ask_follow = '3' if ask_follow == '' else ask_follow
+    followed = {"3":"", "1":"yes", "2":"other_from_salary"}[ask_follow]
     timeStamp = time.time()
     add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
 # =============================================================================
@@ -1410,6 +1411,3 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     tinhtien(1)
     print("Đã cập nhật giá vào room")
     doanhthu()
-
-def chikhac_tuluong():
-    pass
