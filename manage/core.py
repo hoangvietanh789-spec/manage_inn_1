@@ -1040,6 +1040,25 @@ def reverse_transaction(trans_id):
         for month in list(accounts[account]['transaction'].keys()):
             if trans_id in list(accounts[account]['transaction'][month].keys()):
                 delete_transaction(account, month, trans_id)
+    tran_ids = query("accounts")['followed']
+    for id_tr in list(tran_ids.keys()):
+        if id_tr == trans_id:
+            conn = sqlite3.connect(db_file)
+            cursor = conn.cursor()
+            try:
+                # JSON path an toàn: quote các key
+                path = f'$.followed."{trans_id}"'
+                cursor.execute("""
+                    UPDATE accounts
+                    SET data = json_remove(data, ?)
+                    WHERE id = 1;
+                """, (path,))
+                conn.commit()
+            except Exception as ex:
+                print(ex)
+            finally:
+                conn.close()
+                
                 
                 
                 
@@ -1069,7 +1088,7 @@ def thauchi_u():
     timeStamp = time.time()
     add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
 # =============================================================================
-# Tiêu thấu có tài 
+# Tiêu thấu có tài sản
 # =============================================================================
 def thauchi_s():
     from datetime import datetime
