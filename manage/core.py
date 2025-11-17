@@ -940,11 +940,40 @@ def add_trans(account, month, timeStamp, *new_trans):
         conn.close()
     
     if new_trans['followed'] == "yes":
-        new_trans['account'] = account
-        new_trans['month'] = month
+        new_trans1 = new_trans.copy()
+        new_trans1['account'] = account
+        new_trans1['month'] = month
         patch = {
             "followed": {
-                timeStamp: new_trans
+                timeStamp: new_trans1
+            }
+        }
+        import sqlite3
+        import json
+        safe_mount_drive()
+        conn = sqlite3.connect(db_file)
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                                UPDATE accounts
+                                SET data = json_patch(data, ?)
+                                WHERE id = 1
+                            """, (json.dumps(patch),))
+            conn.commit()
+        except Exception as ex:
+            print(ex)
+        finally:
+            conn.close()
+    
+    if new_trans['followed'] == "other_from_salary":
+        new_trans2 = new_trans.copy()
+        new_trans2['month'] = month
+        patch = {
+            "other_from_salary": {
+                month:{
+                    timeStamp: new_trans2
+                    }
+                
             }
         }
         import sqlite3
@@ -1381,3 +1410,6 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     tinhtien(1)
     print("Đã cập nhật giá vào room")
     doanhthu()
+
+def chikhac_tuluong():
+    pass
