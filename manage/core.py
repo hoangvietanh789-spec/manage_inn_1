@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 17 14:58:00 2025
+
+@author: admin
+"""
+
 db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
 file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
 file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
@@ -257,7 +264,7 @@ def query(table):
 # trả df các bảng cashflow, tong_diennuoc, chikhac
 # =============================================================================
 def querydf(table):
-	safe_mount_drive()
+    safe_mount_drive()
     import pandas as pd
     import sqlite3
     conn = sqlite3.connect(db_file)
@@ -286,265 +293,6 @@ def update(table, object_address, value_update):
         print(ex)
     finally:
         conn.close()
-
-
-def add_trans(account, month, timeStamp, *new_trans):
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
-    import time
-    # today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
-    list_key = ['amount','date','pay_for','pay_type','remark']
-    set_key = set(list_key)
-    if len(new_trans) != 0:
-        new_trans = new_trans[0]
-        if set_key - set(new_trans.keys()) != set():
-            print('thiếu',set_key - set(new_trans.keys()))
-            return
-    accounts = query('accounts')['active']
-    acct = accounts[account]
-    last_balance = acct['os_balance']
-    account_type = acct['account_type']
-    if account_type == 'dda':
-        os_balance = last_balance + new_trans['amount'] if new_trans['pay_type'] == "credit" else last_balance - new_trans['amount']
-    elif account_type in ['loan', 'overdraft']:
-        os_balance = last_balance + new_trans['amount'] if new_trans['pay_type'] == "credit" else last_balance - new_trans['amount'] if new_trans['pay_for'] == 'principal' else last_balance
-    new_trans['last_balance'] = last_balance
-    new_trans['os_balance'] = os_balance
-    update("accounts",f'active.{account}.os_balance', os_balance)
-    patch = {
-        "active": {
-            account: {
-                "transaction": {
-                    month: {
-                        timeStamp: new_trans
-                    }
-                }
-            }
-        }
-    }
-    import sqlite3
-    import json
-    safe_mount_drive()
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-                            UPDATE accounts
-                            SET data = json_patch(data, ?)
-                            WHERE id = 1
-                        """, (json.dumps(patch),))
-        conn.commit()
-    except Exception as ex:
-        print(ex)
-    finally:
-        conn.close()
-
-def chikhac1():
-    from datetime import datetime
-    import time
-    amount = int(input('amount: '))
-    if amount == 0:
-        print('amount = 0')
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    remark = input("remark: ")
-    timeStamp = time.time()
-    add_trans('vietinbank', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-
-def thauchi_u():
-    from datetime import datetime
-    import time
-    amount = int(input('amount: '))
-    if amount == 0:
-        print('amount = 0')
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    remark = input("remark: ")
-    timeStamp = time.time()
-    add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
-
-def thauchi_s():
-    from datetime import datetime
-    import time
-    amount = int(input('amount: '))
-    if amount == 0:
-        print('amount = 0')
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    remark = input("remark: ")
-    timeStamp = time.time()
-    add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
-
-def tranomon():
-    from datetime import datetime
-    import time
-    timeStamp = time.time()
-    interest = input('interest: ')
-    interest = int(interest) if interest != '' else 0
-    principal = input('principal: ')
-    principal = int(principal) if principal != '' else 0
-    if interest + principal == 0:
-        print("no payment")
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    source = input("[v] = vietinbank / Enter = bidv: ")
-    remark = input("remark: ")
-    if source == 'v':
-        if principal != 0:
-            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-        if interest != 0:
-            timeStamp = time.time()
-            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-    else:
-        if principal != 0:
-            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-        if interest != 0:
-            timeStamp = time.time()
-            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-
-def trathauchi_u():
-    from datetime import datetime
-    import time
-    timeStamp = time.time()
-    interest = input('interest: ')
-    interest = int(interest) if interest != '' else 0
-    principal = input('principal: ')
-    principal = int(principal) if principal != '' else 0
-    if interest + principal == 0:
-        print("no payment")
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    source = input("[v] = vietinbank / Enter = bidv: ")
-    remark = input("remark: ")
-    if source == 'v':
-        if principal != 0:
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-        if interest != 0:
-            timeStamp = time.time()
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-    else:
-        if principal != 0:
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-        if interest != 0:
-            timeStamp = time.time()
-            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-
-def trathauchi_s():
-    from datetime import datetime
-    import time
-    timeStamp = time.time()
-    interest = input('interest: ')
-    interest = int(interest) if interest != '' else 0
-    principal = input('principal: ')
-    principal = int(principal) if principal != '' else 0
-    if interest + principal == 0:
-        print("no payment")
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    source = input("[v] = vietinbank / Enter = bidv: ")
-    remark = input("remark: ")
-    if source == 'v':
-        if principal != 0:
-            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-        if interest != 0:
-            timeStamp = time.time()
-            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-    else:
-        if principal != 0:
-            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
-        if interest != 0:
-            timeStamp = time.time()
-            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
-
-def delete_transaction(account, month, trans_id):
-    import sqlite3
-    safe_mount_drive()
-    account_type = query("accounts")['active'][account]['account_type']
-    os_balance = query("accounts")['active'][account]['os_balance']
-    pay_type = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_type']
-    pay_for = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_for']
-    amount = query("accounts")['active'][account]['transaction'][month][trans_id]['amount']
-    if account_type in ['loan', 'overdraft']:
-       	if pay_type == 'credit':
-     	   os_balance -= amount
-        elif pay_type == 'debit' and pay_for == 'principal':
-            os_balance += amount 
-    elif account_type == 'dda':
-        if pay_type == 'credit':
-            os_balance -= amount
-        elif pay_type == 'debit':
-            os_balance += amount 
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    try:
-        # JSON path an toàn: quote các key
-        path = f'$.active."{account}".transaction."{month}"."{trans_id}"'
-        cursor.execute(f"""
-            UPDATE accounts
-            SET data = json_remove(data, ?)
-            WHERE id = 1;
-        """, (path,))
-        conn.commit()
-    except Exception as ex:
-        print(ex)
-    finally:
-        conn.close()
-    update("accounts",f'active.{account}.os_balance', os_balance)
-def reverse_transaction(trans_id):
-    accounts = query("accounts")['active']
-    for account in list(accounts.keys()):
-        for month in list(accounts[account]['transaction'].keys()):
-            if trans_id in list(accounts[account]['transaction'][month].keys()):
-                delete_transaction(account, month, trans_id)
-	
 # =============================================================================
 # creating db file by import direct from json: price, room, tenant. auto delete if exists
 # =============================================================================
@@ -632,34 +380,6 @@ def diennuoc():
     update('rooms', f'{this_month}.{room}.electric_end', elec_end)
     update('rooms', f'{this_month}.{room}.water_end', water_end)
     print("done")
-
-# =============================================================================
-# insert customer payment
-# =============================================================================
-def pay():
-    from datetime import datetime
-    today = datetime.now()
-    this_month = datetime.strftime(today, "%Y%m")
-    room = input("Room: ").upper()
-    rooms = query('rooms')[this_month]
-    if room not in rooms:
-        print("Room not valid")
-        return
-    elif rooms[room]['status'] != 'rented':
-        print("Room not rented yet")
-        return
-    paid = rooms[room]['payment']
-    if paid != 0:
-        message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
-        ask = input(message)
-        if ask.upper() != "Y":
-            return
-    payment = paid + int(input("Payment: ")) 
-    update('rooms', f'{this_month}.{room}.payment', payment)
-    update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
-    print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
-    tinhtien(1) # (1) to avoid asking month
-    doanhthu()
 
 # =============================================================================
 # add new room by insert data clob
@@ -1152,6 +872,411 @@ def doanhthu():
 # conn.commit()
 # conn.close()
 
+
+
+
+
+
+
+# =============================================================================
+# 
+# =============================================================================
+# =============================================================================
+# PHẦN CÁC HÀM HẠCH TOÁN
+# =============================================================================
+# =============================================================================
+# 
+# =============================================================================
+
+# =============================================================================
+# Thêm các giao dịch cụ thể theo từng tài khoản
+# =============================================================================
+def add_trans(account, month, timeStamp, *new_trans):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    import time
+    # today = datetime.now(ZoneInfo("Asia/Ho_Chi_Minh"))
+    list_key = ['amount','date','pay_for','pay_type','remark']
+    set_key = set(list_key)
+    if len(new_trans) != 0:
+        new_trans = new_trans[0]
+        if set_key - set(new_trans.keys()) != set():
+            print('thiếu',set_key - set(new_trans.keys()))
+            return
+    accounts = query('accounts')['active']
+    acct = accounts[account]
+    last_balance = acct['os_balance']
+    account_type = acct['account_type']
+    if account_type == 'dda':
+        os_balance = last_balance + new_trans['amount'] if new_trans['pay_type'] == "credit" else last_balance - new_trans['amount']
+    elif account_type in ['loan', 'overdraft']:
+        os_balance = last_balance + new_trans['amount'] if new_trans['pay_type'] == "credit" else last_balance - new_trans['amount'] if new_trans['pay_for'] == 'principal' else last_balance
+    new_trans['last_balance'] = last_balance
+    new_trans['os_balance'] = os_balance
+    update("accounts",f'active.{account}.os_balance', os_balance)
+    patch = {
+        "active": {
+            account: {
+                "transaction": {
+                    month: {
+                        timeStamp: new_trans
+                    }
+                }
+            }
+        }
+    }
+    import sqlite3
+    import json
+    safe_mount_drive()
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+                            UPDATE accounts
+                            SET data = json_patch(data, ?)
+                            WHERE id = 1
+                        """, (json.dumps(patch),))
+        conn.commit()
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()
+# =============================================================================
+# Tiêu thấu chi tín chấp 
+# =============================================================================
+def thauchi_u():
+    from datetime import datetime
+    import time
+    amount = int(input('amount: '))
+    if amount == 0:
+        print('amount = 0')
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    remark = input("remark: ")
+    timeStamp = time.time()
+    add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
+# =============================================================================
+# Tiêu thấu có tài 
+# =============================================================================
+def thauchi_s():
+    from datetime import datetime
+    import time
+    amount = int(input('amount: '))
+    if amount == 0:
+        print('amount = 0')
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    remark = input("remark: ")
+    timeStamp = time.time()
+    add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark})
+# =============================================================================
+# Trả nợ món 
+# =============================================================================
+def tranomon():
+    from datetime import datetime
+    import time
+    timeStamp = time.time()
+    interest = input('interest: ')
+    interest = int(interest) if interest != '' else 0
+    principal = input('principal: ')
+    principal = int(principal) if principal != '' else 0
+    if interest + principal == 0:
+        print("no payment")
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    source = input("[v] = vietinbank / Enter = bidv: ")
+    remark = input("remark: ")
+    if source == 'v':
+        if principal != 0:
+            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            timeStamp = time.time()
+            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    else:
+        if principal != 0:
+            add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            timeStamp = time.time()
+            add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+# =============================================================================
+# Trả nợ thấu chi tín 
+# =============================================================================
+def trathauchi_u():
+    from datetime import datetime
+    import time
+    timeStamp = time.time()
+    interest = input('interest: ')
+    interest = int(interest) if interest != '' else 0
+    principal = input('principal: ')
+    principal = int(principal) if principal != '' else 0
+    if interest + principal == 0:
+        print("no payment")
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    source = input("[v] = vietinbank / Enter = bidv: ")
+    remark = input("remark: ")
+    if source == 'v':
+        if principal != 0:
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            timeStamp = time.time()
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    else:
+        if principal != 0:
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            timeStamp = time.time()
+            add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+# =============================================================================
+# Trả nợ thấu chi có tài 
+# =============================================================================
+def trathauchi_s():
+    from datetime import datetime
+    import time
+    timeStamp = time.time()
+    interest = input('interest: ')
+    interest = int(interest) if interest != '' else 0
+    principal = input('principal: ')
+    principal = int(principal) if principal != '' else 0
+    if interest + principal == 0:
+        print("no payment")
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    source = input("[v] = vietinbank / Enter = bidv: ")
+    remark = input("remark: ")
+    if source == 'v':
+        if principal != 0:
+            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            timeStamp = time.time()
+            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            add_trans('vietinbank', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+    else:
+        if principal != 0:
+            add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+        if interest != 0:
+            timeStamp = time.time()
+            add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark})
+            
+# =============================================================================
+# xóa 01 bản ghi giao dịch
+# =============================================================================
+def delete_transaction(account, month, trans_id):
+    import sqlite3
+    safe_mount_drive()
+    if account not in list(query("accounts")['active'].keys()) or month not in list(query("accounts")['active'][account]['transaction'].keys()) or trans_id not in list(query("accounts")['active'][account]['transaction'][month].keys()):
+        print(account, month, trans_id, "data not found")
+        return
+    account_type = query("accounts")['active'][account]['account_type']
+    os_balance = query("accounts")['active'][account]['os_balance']
+    pay_type = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_type']
+    pay_for = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_for']
+    amount = query("accounts")['active'][account]['transaction'][month][trans_id]['amount']
+    if account_type in ['loan', 'overdraft']:
+       	if pay_type == 'credit':
+     	   os_balance -= amount
+        elif pay_type == 'debit' and pay_for == 'principal':
+            os_balance += amount 
+    elif account_type == 'dda':
+        if pay_type == 'credit':
+            os_balance -= amount
+        elif pay_type == 'debit':
+            os_balance += amount 
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    try:
+        # JSON path an toàn: quote các key
+        path = f'$.active."{account}".transaction."{month}"."{trans_id}"'
+        cursor.execute(f"""
+            UPDATE accounts
+            SET data = json_remove(data, ?)
+            WHERE id = 1;
+        """, (path,))
+        conn.commit()
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()
+    update("accounts",f'active.{account}.os_balance', os_balance)
+# =============================================================================
+# reserve lại 01 giao dịch bằng cách tìm và xóa các trans_id trong tất cả các tài khoản
+# =============================================================================
+def reverse_transaction(trans_id):
+    accounts = query("accounts")['active']
+    for account in list(accounts.keys()):
+        for month in list(accounts[account]['transaction'].keys()):
+            if trans_id in list(accounts[account]['transaction'][month].keys()):
+                delete_transaction(account, month, trans_id)
+
+# =============================================================================
+# adtrans vào bảng accounts và cập nhật vào bảng chikhac thông qua hàm chikhac1()
+# =============================================================================
+def chikhac():
+    from datetime import datetime
+    import time
+    amount = int(input('amount: '))
+    if amount == 0:
+        print('amount = 0')
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    remark = input("remark: ")
+    timeStamp = time.time()
+    add_trans('vietinbank', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark})
+    chikhac1(date, remark, amount, str(timeStamp))
+# =============================================================================
+# Nhập số tiền chi ra khác
+# chi_khac('dd/mm/yyyy', "Chuyển tiền sang thấu chi", 5000000, "")
+# =============================================================================
+def chikhac1(date, noidung_chi, sotien_chi, ghichu):
+    safe_mount_drive()
+    import sqlite3
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO chikhac (date, noidung_chi, sotien_chi, ghichu)
+        VALUES (?, ?, ?, ?)
+    """, (date, noidung_chi, sotien_chi, ghichu))
+    conn.commit()
+    conn.close()
+    print(f"Đã lưu ngày {date}: chi {sotien_chi:,} - ghi chú: {ghichu}")
+    doanhthu()
+
+# import sqlite3
+# conn = sqlite3.connect(db_file)
+# cursor = conn.cursor()
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS chikhac (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     date TEXT NOT NULL,
+#     noidung_chi TEXT NOT NULL,
+#     sotien_chi REAL NOT NULL,
+#     ghichu TEXT
+# )
+# """)
+# conn.commit()
+# conn.close()
+
+# =============================================================================
+# Xóa 1 dòng trong bảng chikhac trong trường hợp nhập nhầm thông tin
+# =============================================================================
+def xoa_chi_khac(record_id):
+    df = querydf('chikhac')
+    trans_id = list(df[df['id']==record_id]['ghichu'])[0]
+    import sqlite3
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    # Xóa theo id
+    cursor.execute("DELETE FROM chikhac WHERE id = ?", (record_id,))
+    conn.commit()
+    conn.close()
+    print(f"Đã xóa bản ghi id={record_id} trong bảng chikhac")
+    reverse_transaction(trans_id)
+
+# =============================================================================
+# insert customer payment
+# =============================================================================
+def pay():
+    from datetime import datetime
+    import time
+    timeStamp = time.time()
+    today = datetime.now()
+    this_month = datetime.strftime(today, "%Y%m")
+    room = input("Room: ").upper()
+    rooms = query('rooms')[this_month]
+    if room not in rooms:
+        print("Room not valid")
+        return
+    elif rooms[room]['status'] != 'rented':
+        print("Room not rented yet")
+        return
+    paid = rooms[room]['payment']
+    if paid != 0:
+        message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
+        ask = input(message)
+        if ask.upper() != "Y":
+            return
+    this_pay = int(input("Payment: "))
+    payment = paid + this_pay
+    update('rooms', f'{this_month}.{room}.payment', payment)
+    update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
+    print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
+    tinhtien(1) # (1) to avoid asking month
+    doanhthu()
+    add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}"})
+# =============================================================================
+# Hủy các giao dịch thanh toán tiền trọ của người trọ
+# =============================================================================
+def unpay():
+    from datetime import datetime
+    room = input("Room: ").upper()
+    month = input("Month [yyyymm]: ")
+    try:
+        datetime.strptime(month, "%Y%m")
+    except Exception as ex:
+        print("month error:", ex)
+        return
+    rooms = query('rooms')[month]
+    if room not in rooms:
+        print("Room not valid")
+        return
+    elif rooms[room]['status'] != 'rented':
+        print("Room not rented yet")
+        return
+    update('rooms', f'{month}.{room}.payment', 0)
+    update('rooms', f'{month}.{room}.payment_date', "")
+    tinhtien(1) # (1) to avoid asking month
+    doanhthu()
+    trans = query('accounts')['active']['vietinbank']['transaction'][month]
+    for tran in trans:
+        if trans[tran]['remark'] == f"{room} pay {month}":
+            reverse_transaction(tran)
 # =============================================================================
 # Nhập số tiền chi điện nước
 # tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc)
@@ -1162,6 +1287,7 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     import math
     from datetime import datetime
     from dateutil.relativedelta import relativedelta
+    import time
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
 
@@ -1203,51 +1329,7 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     tinhtien(1)
     print("Đã cập nhật giá vào room")
     doanhthu()
-
-    
-
-# =============================================================================
-# Nhập số tiền chi ra khác
-# chi_khac('dd/mm/yyyy', "Chuyển tiền sang thấu chi", 5000000, "")
-# =============================================================================
-def chikhac(date, noidung_chi, sotien_chi, ghichu):
-    safe_mount_drive()
-    import sqlite3
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO chikhac (date, noidung_chi, sotien_chi, ghichu)
-        VALUES (?, ?, ?, ?)
-    """, (date, noidung_chi, sotien_chi, ghichu))
-    conn.commit()
-    conn.close()
-    print(f"Đã lưu ngày {date}: chi {sotien_chi:,} - ghi chú: {ghichu}")
-    doanhthu()
-
-# import sqlite3
-# conn = sqlite3.connect(db_file)
-# cursor = conn.cursor()
-# cursor.execute("""
-# CREATE TABLE IF NOT EXISTS chikhac (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     date TEXT NOT NULL,
-#     noidung_chi TEXT NOT NULL,
-#     sotien_chi REAL NOT NULL,
-#     ghichu TEXT
-# )
-# """)
-# conn.commit()
-# conn.close()
-
-# =============================================================================
-# Xóa 1 dòng trong bảng chikhac trong trường hợp nhập nhầm thông tin
-# =============================================================================
-def xoa_chi_khac(record_id):
-    import sqlite3
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    # Xóa theo id
-    cursor.execute("DELETE FROM chikhac WHERE id = ?", (record_id,))
-    conn.commit()
-    conn.close()
-    print(f"Đã xóa bản ghi id={record_id} trong bảng chikhac")
+    if tien_dien > 0:
+        add_trans('vietinbank', month, time.time(), {"amount": tien_dien,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Điện {month}: {so_dien} số"})
+    if tien_nuoc > 0:
+        add_trans('vietinbank', month, time.time(), {"amount": tien_nuoc,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "debit","remark": f"Nước {month}: {so_nuoc} số"})
