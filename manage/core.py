@@ -1243,7 +1243,7 @@ def trathauchi_s():
         if interest != 0:
             timeStamp = time.time()
             add_trans('overdraft_secured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
-           
+    doanhthu() 
 # =============================================================================
 # adtrans vào bảng accounts và cập nhật vào bảng chikhac thông qua hàm chikhac1()
 # =============================================================================
@@ -1371,9 +1371,7 @@ def unpay():
     for tran in trans:
         if trans[tran]['remark'] == f"{room} pay {month}":
             reverse_transaction(tran)
-    tinhtien(1) # (1) to avoid asking month
     doanhthu()
-    
 # =============================================================================
 # Nhập số tiền chi điện nước
 # tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc)
