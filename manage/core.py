@@ -1324,8 +1324,8 @@ def bidv_ungtien():
         print(ex)
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    ask = input("1.unsecured\2.secured: ")    
-    overdraft = {"1":"overdraft_unsecured","2":"overdraft_secured"}
+    ask = input("1.unsecured/2.secured: ")    
+    overdraft = {"1":"overdraft_unsecured","2":"overdraft_secured"}[ask]
     remark = "ungtien_" + input("remark: ")
     followed = "yes"
     timeStamp = time.time()
@@ -1410,7 +1410,7 @@ def bidv_hoantien():
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     ask = input("1.from unsecured\2.from secured: ")    
-    overdraft = {"1":"overdraft_unsecured","2":"overdraft_secured"}
+    overdraft = {"1":"overdraft_unsecured","2":"overdraft_secured"}[ask]
     remark = "hoantien_" + overdraft
     followed = "yes"
     timeStamp = time.time()
