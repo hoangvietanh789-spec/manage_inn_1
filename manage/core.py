@@ -1331,7 +1331,7 @@ def trathauchi_u():
     followed_list = list(followed.keys())
     for key in followed_list:
         if followed[key]['account'] == 'overdraft_unsecured':
-            print(followed_list.index(key), followed[key], followed['remark'], followed['amount'])
+            print(followed_list.index(key), followed[key], followed[key]['remark'], followed[key]['amount'])
     ask_id = int(input("id: "))
     followed_id = followed_list[ask_id]
     if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
@@ -1382,7 +1382,7 @@ def trathauchi_s():
     followed_list = list(followed.keys())
     for key in followed_list:
         if followed[key]['account'] == 'overdraft_secured':
-            print(followed_list.index(key), followed[key], followed['remark'], followed['amount'])
+            print(followed_list.index(key), followed[key], followed[key]['remark'], followed[key]['amount'])
     ask_id = int(input("id: "))
     followed_id = followed_list[ask_id]
     if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
