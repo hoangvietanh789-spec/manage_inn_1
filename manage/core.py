@@ -1452,7 +1452,7 @@ def bidv_ungtien():
     followed = "yes"
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": '', "followed_id":""})
-    add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": followed, "followed_id":""})
+    add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": followed, "followed_id":""})
 # =============================================================================
 # Bà nội trả
 # =============================================================================
@@ -1537,5 +1537,5 @@ def bidv_hoantien():
     followed = "yes"
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": '', "followed_id":""})
-    add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": followed, "followed_id":""})
+    add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": followed, "followed_id":""})
 
