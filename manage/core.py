@@ -15,23 +15,35 @@ file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"
 
 
 def brief():
-    from datetime import datetime
-    this_month = datetime.strftime(datetime.now(), "%Y%m")
     print("""
         ====================================
-          manange.tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc): Nhập số tiền điện, tiền nước tổng theo tháng
-          manage.pay(): Nhập số tiền thanh toán theo từng phòng
-          manage.chikhac('dd/mm/yyyy', 'noidung', sotien_chi, ''): các khoản chi khác
-          manage.diennuoc(): Nhập số CÔNG TƠ điện nước theo từng phòng
-          manage.tinhtien(): Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
-          manage.doanhthu(): Tính toán cân đối thu chi
+            tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc): Nhập số tiền điện, tiền nước tổng theo tháng
+            tinhtien(): Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
+            doanhthu(): Tính toán cân đối thu chi
+            chikhac(): ghi nhận giao dịch vào tk CTG và tạo thông tin vào bảng qua chikhac1()
+                chikhac1(date, noidung_chi, sotien_chi, ghichu)
+            xoa_chi_khac(record_id): xóa giao dịch trên CTG và cập nhật bảng chikhac
         ====================================
-          manage.query(): trả json các bảng rooms, tenants, prices
-          manage.querydf(): trả df các bảng cashflow, tong_diennuoc, chikhac
+            pay(): Nhập số tiền thanh toán theo từng phòng
+            unpay(): Xóa số tiền đã trả của 01 phòng và xóa luôn giao dịch được mark trong tk CTG
+            diennuoc(): Nhập số CÔNG TƠ điện nước theo từng phòng
         ====================================
-          manage.view(): Mở link web
+            query(): trả json các bảng rooms, tenants, prices
+            querydf(): trả df các bảng cashflow, tong_diennuoc, chikhac
         ====================================
-          manage.update
+            view(): Mở link web
+        ====================================
+            new_month(): khởi động tháng mới
+            add_room(room_data): thêm 01 room mới gối đầu giữa tháng
+            add_tenant(tenant_data): thêm thông tin người dùng mới
+            automap_tenant(): tự động cập nhật từ tenants vào rooms
+            manualmap_tenant(): thủ công cập nhật từ tenants vào rooms
+            change_tenant_status(**kwargs): cập nhật người trả phòng
+            reset_room(*room_reset): xóa dữ liệu room trả phòng
+        ====================================
+            update: cập nhật json
+            import_json(): nhập lại dữ liệu từ các file json
+        
 """)
 
 # =============================================================================
@@ -1064,12 +1076,37 @@ def unpay():
 # 
 # =============================================================================
 # =============================================================================
-# PHẦN CÁC HÀM HẠCH TOÁN
+# PHẦN CÁC QUẢN LÝ CHI TIÊU
 # =============================================================================
 # =============================================================================
 # 
 # =============================================================================
-
+def brief_bid():
+    print("""
+        ====================================
+            bid_luong(): tạo số dư ban đầu mỗi tháng cho quỹ lương
+            bid_banoi(): ghi nhận khoản bà trả vào quỹ lương
+            bid_thuong(): ghi nhận khoản Thưởng vào quỹ lương
+        ====================================
+            bid_chikhac(): ghi nhận các khoản chi việc chung từ Lương
+            bid_thauchi_u(): ghi nhận thấu chi KHÔNG tài sản
+            bid_thauchi_s(): ghi nhận thấu chi có tài sản
+        ====================================
+            bid_ungtien(): ghi nhận các khoản tạm ck về thấu chi để bớt gốc lãi
+            bid_hoantien(): ghi nhận các khoản từ thấu chi về dda để hoàn lại đã ứng
+        ====================================
+            bid_tranomon(): ghi nhận giao dịch trả nợ món từ Trọ (v) hoặc BIDV
+            bid_trathauchi_u(): ghi nhận giao dịch trả nợ thấu chi KHÔNG tài sản 
+            bid_trathauchi_s(): ghi nhận giao dịch trả nợ thấu chi có tài sản
+        ====================================
+            reverse_transaction(trans_id): tìm và xóa tất cả các trans có trans_id trong tất cả các tài khoản
+                delete_transaction(account, month, trans_id): xóa 01 giao dịch cho 1 tài khoản
+        ====================================
+                add_trans(account, month, timeStamp, *new_trans): tạo 01 giao dịch cho 1 tài khoản
+        ====================================
+          
+          
+""")
 # =============================================================================
 # Thêm các giao dịch cụ thể theo từng tài khoản
 # =============================================================================
@@ -1219,7 +1256,7 @@ def reverse_transaction(trans_id):
 # =============================================================================
 # Tiêu thấu chi tín chấp 
 # =============================================================================
-def thauchi_u():
+def bid_thauchi_u():
     from datetime import datetime
     import time
     amount = int(input('amount: '))
@@ -1242,7 +1279,7 @@ def thauchi_u():
 # =============================================================================
 # Tiêu thấu có tài sản
 # =============================================================================
-def thauchi_s():
+def bid_thauchi_s():
     from datetime import datetime
     import time
     amount = int(input('amount: '))
@@ -1265,7 +1302,7 @@ def thauchi_s():
 # =============================================================================
 # Trả nợ món 
 # =============================================================================
-def tranomon():
+def bid_tranomon():
     from datetime import datetime
     import time
     timeStamp = time.time()
@@ -1306,7 +1343,7 @@ def tranomon():
 # =============================================================================
 # Trả nợ thấu chi tín 
 # =============================================================================
-def trathauchi_u():
+def bid_trathauchi_u():
     from datetime import datetime
     import time
     timeStamp = time.time()
@@ -1358,7 +1395,7 @@ def trathauchi_u():
 # =============================================================================
 # Trả nợ thấu chi có tài 
 # =============================================================================
-def trathauchi_s():
+def bid_trathauchi_s():
     from datetime import datetime
     import time
     timeStamp = time.time()
@@ -1411,7 +1448,7 @@ def trathauchi_s():
 # =============================================================================
 # giao dịch chi tiêu khác từ lương cố định trả nợ
 # =============================================================================
-def bidv_chikhac():
+def bid_chikhac():
     from datetime import datetime
     import time
     amount = int(input('amount: '))
@@ -1433,7 +1470,7 @@ def bidv_chikhac():
 # =============================================================================
 # ứng tiền từ dda vào thấu chi 
 # =============================================================================
-def bidv_ungtien():
+def bid_ungtien():
     from datetime import datetime
     import time
     amount = int(input('amount: '))
@@ -1456,69 +1493,9 @@ def bidv_ungtien():
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": '', "followed_id":""})
     add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": followed, "followed_id":""})
 # =============================================================================
-# Bà nội trả
-# =============================================================================
-def bidv_banoi():
-    from datetime import datetime
-    import time
-    amount = int(input('amount: '))
-    if amount == 0:
-        print('amount = 0')
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    remark = "banoi_" + month
-    timeStamp = time.time()
-    add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
-# =============================================================================
-# ghi có các khoản thưởng vào BIDV
-# =============================================================================
-def bidv_thuong():
-    from datetime import datetime
-    import time
-    amount = int(input('thuong: '))
-    if amount == 0:
-        print('amount = 0')
-        return
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    remark = "bonus_" + input("remark: ")
-    timeStamp = time.time()
-    add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
-# =============================================================================
-# ghi có các khoản lương vào BIDV
-# =============================================================================
-def bidv_luong():
-    from datetime import datetime
-    import time
-    amount = 20_000_000
-    date = input('dd/mm/yyyy: ')
-    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
-    try:
-        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    except Exception as ex:
-        print(ex)
-        return
-    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
-    remark = "salary_" + input("remark: ")
-    timeStamp = time.time()
-    add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
-# =============================================================================
 # hoàn lương từ thấu chi vào bidv qua vietinbank
 # =============================================================================
-def bidv_hoantien():
+def bid_hoantien():
     from datetime import datetime
     import time
     amount = int(input('thuong: '))
@@ -1540,4 +1517,63 @@ def bidv_hoantien():
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": '', "followed_id":""})
     add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": followed, "followed_id":""})
-
+# =============================================================================
+# ghi có các khoản lương vào BIDV
+# =============================================================================
+def bid_luong():
+    from datetime import datetime
+    import time
+    amount = 20_000_000
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    remark = "salary_" + input("remark: ")
+    timeStamp = time.time()
+    add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
+# =============================================================================
+# ghi có các khoản thưởng vào BIDV
+# =============================================================================
+def bid_thuong():
+    from datetime import datetime
+    import time
+    amount = int(input('thuong: '))
+    if amount == 0:
+        print('amount = 0')
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    remark = "bonus_" + input("remark: ")
+    timeStamp = time.time()
+    add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
+# =============================================================================
+# Bà nội trả
+# =============================================================================
+def bid_banoi():
+    from datetime import datetime
+    import time
+    amount = int(input('amount: '))
+    if amount == 0:
+        print('amount = 0')
+        return
+    date = input('dd/mm/yyyy: ')
+    date = date if date != '' else datetime.strftime(datetime.now(), '%d/%m/%Y')
+    try:
+        month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    except Exception as ex:
+        print(ex)
+        return
+    month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
+    remark = "banoi_" + month
+    timeStamp = time.time()
+    add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
