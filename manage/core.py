@@ -1327,8 +1327,13 @@ def trathauchi_u():
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
-    print(query('accounts')['followed'].keys())
-    followed_id = input("followed_id")
+    followed = query('accounts')['followed']
+    followed_list = list(followed.keys())
+    for key in followed_list:
+        if followed[key]['account'] == 'overdraft_unsecured':
+            print(followed_list.index(key), followed[key], followed['remark'], followed['amount'])
+    ask_id = int(input("id: "))
+    followed_id = followed_list[ask_id]
     if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
         print(followed_id, "not in followed list")
         return()
@@ -1373,8 +1378,13 @@ def trathauchi_s():
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     source = input("[v] = vietinbank / Enter = bidv: ")
     remark = input("remark: ")
-    print(query('accounts')['followed'].keys())
-    followed_id = input("followed_id")
+    followed = query('accounts')['followed']
+    followed_list = list(followed.keys())
+    for key in followed_list:
+        if followed[key]['account'] == 'overdraft_secured':
+            print(followed_list.index(key), followed[key], followed['remark'], followed['amount'])
+    ask_id = int(input("id: "))
+    followed_id = followed_list[ask_id]
     if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
         print(followed_id, "not in followed list")
         return()
