@@ -1333,10 +1333,11 @@ def trathauchi_u():
         if followed[key]['account'] == 'overdraft_unsecured':
             print(followed_list.index(key), key, followed[key]['remark'], followed[key]['amount'])
     ask_id = int(input("id: "))
-    followed_id = followed_list[ask_id]
-    if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
-        print(followed_id, "not in followed list")
-        return()
+    if ask_id == '':
+        followed_id = ''
+    else:
+        followed_id = followed_list[int(ask_id)]
+    
     if source == 'v':
         if principal != 0:
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
@@ -1384,10 +1385,11 @@ def trathauchi_s():
         if followed[key]['account'] == 'overdraft_secured':
             print(followed_list.index(key), key, followed[key]['remark'], followed[key]['amount'])
     ask_id = int(input("id: "))
-    followed_id = followed_list[ask_id]
-    if followed_id != '' and followed_id not in list(query('accounts')['followed'].keys()):
-        print(followed_id, "not in followed list")
-        return()
+    if ask_id == '':
+        followed_id = ''
+    else:
+        followed_id = followed_list[int(ask_id)]
+        
     if source == 'v':
         if principal != 0:
             add_trans('overdraft_secured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
