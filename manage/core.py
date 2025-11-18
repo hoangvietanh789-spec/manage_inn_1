@@ -1084,9 +1084,8 @@ def thauchi_u():
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
-    ask_follow = input("followed - Enter = no\n1.yes\n2.other_from_salary\n")
-    ask_follow = '3' if ask_follow == '' else ask_follow
-    followed = {"3":"", "1":"yes", "2":"other_from_salary"}[ask_follow]
+    ask_follow = input("followed - Enter = yes / no")
+    followed = 'yes' if ask_follow == '' else ''
     timeStamp = time.time()
     add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
 # =============================================================================
@@ -1108,9 +1107,8 @@ def thauchi_s():
         return
     month = datetime.strftime(datetime.strptime(date, '%d/%m/%Y'), '%Y%m')
     remark = input("remark: ")
-    ask_follow = input("followed - Enter = no\n1.yes\n2.other_from_salary\n")
-    ask_follow = '3' if ask_follow == '' else ask_follow
-    followed = {"3":"", "1":"yes", "2":"other_from_salary"}[ask_follow]
+    ask_follow = input("followed - Enter = yes / no")
+    followed = 'yes' if ask_follow == '' else ''
     timeStamp = time.time()
     add_trans('overdraft_secured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
 # =============================================================================
