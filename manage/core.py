@@ -374,7 +374,7 @@ def diennuoc():
 	"""
 	no input argument, insert water and electricity consumed, insert = null => not update
 	"""
-    from datetime import datetime
+	from datetime import datetime
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
     mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
