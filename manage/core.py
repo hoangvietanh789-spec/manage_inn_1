@@ -371,6 +371,9 @@ def import_json():
 # insert water and electricity consumed
 # =============================================================================
 def diennuoc():
+	"""
+	no input argument, insert water and electricity consumed, insert = null => not update
+	"""
     from datetime import datetime
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
@@ -384,8 +387,10 @@ def diennuoc():
     elif rooms[room]['status'] != 'rented':
         print("Room not rented yet")
         return
-    elec_end = int(input(mes_elec))
-    water_end = int(input(mes_water))
+	elec_end = input(mes_elec)
+	elec_end = 0 if elec_end == '' else int(elec_end)
+	water_end = input(mes_water)
+	water_end = 0 if water_end == '' else int(water_end)
     elec_end = elec_end if (rooms[room]['electric_start'] is None or elec_end > rooms[room]['electric_start']) else rooms[room]['electric_start']
     water_end = water_end if (rooms[room]['water_end'] is None or water_end > rooms[room]['water_end']) else rooms[room]['water_end']
     update('rooms', f'{this_month}.{room}.electric_end', elec_end)
