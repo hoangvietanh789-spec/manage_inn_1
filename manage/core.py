@@ -66,7 +66,7 @@ def tinhtien(*month_input):
     import json
     import pandas as pd
     from datetime import datetime
-	
+    
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
 
@@ -371,10 +371,10 @@ def import_json():
 # insert water and electricity consumed
 # =============================================================================
 def diennuoc():
-	"""
-	no input argument, insert water and electricity consumed, insert = null => not update
-	"""
-	from datetime import datetime
+    """
+    no input argument, insert water and electricity consumed, insert = null => not update
+    """
+    from datetime import datetime
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
     mes_elec = f"Công tơ ĐIỆN tháng {this_month}: "
@@ -387,10 +387,10 @@ def diennuoc():
     elif rooms[room]['status'] != 'rented':
         print("Room not rented yet")
         return
-	elec_end = input(mes_elec)
-	elec_end = 0 if elec_end == '' else int(elec_end)
-	water_end = input(mes_water)
-	water_end = 0 if water_end == '' else int(water_end)
+    elec_end = input(mes_elec)
+    elec_end = 0 if elec_end == '' else int(elec_end)
+    water_end = input(mes_water)
+    water_end = 0 if water_end == '' else int(water_end)
     elec_end = elec_end if (rooms[room]['electric_start'] is None or elec_end > rooms[room]['electric_start']) else rooms[room]['electric_start']
     water_end = water_end if (rooms[room]['water_end'] is None or water_end > rooms[room]['water_end']) else rooms[room]['water_end']
     update('rooms', f'{this_month}.{room}.electric_end', elec_end)
@@ -1203,8 +1203,8 @@ def delete_transaction(account, month, trans_id):
     pay_for = query("accounts")['active'][account]['transaction'][month][trans_id]['pay_for']
     amount = query("accounts")['active'][account]['transaction'][month][trans_id]['amount']
     if account_type in ['loan', 'overdraft']:
-       	if pay_type == 'credit':
-     	   os_balance -= amount
+        if pay_type == 'credit':
+           os_balance -= amount
         elif pay_type == 'debit' and pay_for == 'principal':
             os_balance += amount 
     elif account_type == 'dda':
