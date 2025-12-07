@@ -394,8 +394,8 @@ def diennuoc():
     elec_end = 0 if elec_end == '' else int(elec_end)
     water_end = input(mes_water)
     water_end = 0 if water_end == '' else int(water_end)
-    elec_end = elec_end if (rooms[room]['electric_start'] is None or elec_end > rooms[room]['electric_start']) else rooms[room]['electric_start']
-    water_end = water_end if (rooms[room]['water_end'] is None or water_end > rooms[room]['water_end']) else rooms[room]['water_end']
+    elec_end = elec_end if (rooms[room]['electric_end'] is None or elec_end > rooms[room]['electric_start']) else rooms[room]['electric_start']
+    water_end = water_end if (rooms[room]['water_end'] is None or water_end > rooms[room]['water_start']) else rooms[room]['water_start']
     update('rooms', f'{this_month}.{room}.electric_end', elec_end)
     update('rooms', f'{this_month}.{room}.water_end', water_end)
     print("done")
