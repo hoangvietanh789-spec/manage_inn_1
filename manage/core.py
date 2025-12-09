@@ -1036,6 +1036,7 @@ def pay():
         print("Room not rented yet")
         return
     paid = rooms[room]['payment']
+    bill = rooms[room]['bill']
     if paid != 0:
         message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
         ask = input(message)
@@ -1043,7 +1044,12 @@ def pay():
             return
     this_pay = int(input("Payment: "))
     payment = paid + this_pay
+    if payment > bill:
+        prepayment = payment - bill
+    else:
+        prepayment = 0
     update('rooms', f'{this_month}.{room}.payment', payment)
+    update('rooms', f'{this_month}.{room}.prepayment', prepayment)
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
     add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}","followed": "", "followed_id":""})
