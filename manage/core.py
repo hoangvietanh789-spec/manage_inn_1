@@ -479,15 +479,15 @@ def new_month():
     for room, info in data[new_month].items():
         if room in ["R1", "R2", "R3", "R4", "R5"]:
             print(f"====={room}=====")
-            if info['bill'] and info['prepayment'] and info['payment']:
-                if info['bill'] <= info['prepayment']:
-                   info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
-                else:
-                   info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
-            elif info['prepayment'] is not None and info['payment'] is not None:
-                info['prepayment'] += info['payment']
-            elif info['prepayment'] is None:
-                info['prepayment'] = info['payment'] 
+            # if info['bill'] and info['prepayment'] and info['payment']:
+            #     if info['bill'] <= info['prepayment']:
+            #        info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
+            #     else:
+            #        info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
+            # elif info['prepayment'] is not None and info['payment'] is not None:
+            #     info['prepayment'] += info['payment']
+            # elif info['prepayment'] is None:
+            #     info['prepayment'] = info['payment'] 
             try:
                 info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
             except Exception as ex:
@@ -509,7 +509,7 @@ def new_month():
             info["bill"]      = 0
             info["payment"] = 0 
             info["payment_date"] = None 
-            info["due_amount"]   = 0
+            # info["due_amount"]   = 0
     safe_mount_drive()
     import json
     import sqlite3
@@ -1037,6 +1037,7 @@ def pay():
         return
     paid = rooms[room]['payment']
     bill = rooms[room]['bill']
+    prepayment = rooms[room]['prepayment']
     if paid != 0:
         message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
         ask = input(message)
@@ -1044,12 +1045,10 @@ def pay():
             return
     this_pay = int(input("Payment: "))
     payment = paid + this_pay
-    # if payment > bill:
-    #     prepayment = payment - bill
-    # else:
-    #     prepayment = 0
+    if payment > bill:
+        prepayment = prepayment + payment - bill
     update('rooms', f'{this_month}.{room}.payment', payment)
-    # update('rooms', f'{this_month}.{room}.prepayment', prepayment)
+    update('rooms', f'{this_month}.{room}.prepayment', prepayment)
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
     add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}","followed": "", "followed_id":""})
