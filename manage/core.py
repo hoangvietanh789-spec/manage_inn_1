@@ -178,7 +178,8 @@ def tinhtien(*month_input):
     - Tiền nước: {info["water_fee"]:,.0f} = ({info["water_end"]:,.0f} - {info["water_start"]:,.0f}) * {water_price:,.0f}đ/m3
     - Đã thanh toán/trả trước: {info["payment"]:,.0f}
     - Còn thiếu: {info["due_amount"]:,.0f}
-    Số tài khoản: 106000316181 - Vietinbank - Hoàng Việt Anh"""
+    Số tài khoản: 106000316181 - Vietinbank - Hoàng Việt Anh
+    Thanh toán trước: 10/{datetime.strftime(today,'%m/%Y')} lúc 23:59"""
             })
             
     import pandas as pd
