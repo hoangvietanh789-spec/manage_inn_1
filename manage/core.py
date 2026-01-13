@@ -479,15 +479,17 @@ def new_month():
     for room, info in data[new_month].items():
         if room in ["R1", "R2", "R3", "R4", "R5"]:
             print(f"====={room}=====")
-            if info['bill'] and info['prepayment'] and info['payment']:
-                if info['bill'] <= info['prepayment']:
-                   info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
-                else:
-                   info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
-            elif info['prepayment'] is not None and info['payment'] is not None:
-                info['prepayment'] += info['payment']
-            elif info['prepayment'] is None:
-                info['prepayment'] = info['payment'] 
+            # if info['bill'] and info['prepayment'] and info['payment']:
+            #     if info['bill'] <= info['prepayment']:
+            #        info['prepayment'] = info['prepayment'] - info['bill'] + info['payment']
+            #     else:
+            #        info['prepayment'] = info['payment'] - info['due_amount'] if info['payment'] > info['due_amount'] else 0
+            # elif info['prepayment'] is not None and info['payment'] is not None:
+            #     info['prepayment'] += info['payment']
+            # elif info['prepayment'] is None:
+            #     info['prepayment'] = info['payment'] 
+            this_prepayment = 0 if (new_month not in info['prepayment'] or info['prepayment'][new_month] == '' or info['prepayment'][new_month] is None) else info['prepayment'][new_month]
+            
             try:
                 info["start_date"] = datetime.strftime(datetime.strptime(info["start_date"], "%d/%m/%Y") + relativedelta(months=1) , "%d/%m/%Y") if info["start_date"] is not None else None
             except Exception as ex:
@@ -500,10 +502,10 @@ def new_month():
                 info["due_date"] = datetime.strftime(datetime.strptime(info["due_date"], "%d/%m/%Y") + relativedelta(months=1),"%d/%m/%Y") if info["due_date"] is not None else None
             except Exception as ex:
                 print("due_date", ex, info["due_date"])
-            if info["bill"] < info["prepayment"] + info["payment"]:
+            if info["bill"] < this_prepayment + info["payment"]:
                 due_amount = 0
             else:
-                due_amount = info["bill"] - info["prepayment"] - info["payment"]
+                due_amount = info["bill"] - this_prepayment - info["payment"]
             info["electric_start"] = info["electric_end"]  
             info["electric_end"]   = None  
             info["electric_fee"]   = None
@@ -512,6 +514,7 @@ def new_month():
             info["water_fee"] = None
             info["bill"]      = 0
             info["payment"] = 0 
+            info["prepayment_this"] = 0 
             info["payment_date"] = None 
             info["due_amount"]   = due_amount
             info["due_amount"]   = 0
@@ -1029,6 +1032,7 @@ def xoa_chi_khac(record_id):
 def pay():
     from datetime import datetime
     import time
+    from dateutil.relativedelta import relativedelta
     timeStamp = time.time()
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
@@ -1052,8 +1056,19 @@ def pay():
     payment = paid + this_pay
     if payment > bill:
         prepayment_this = prepayment_this + payment - bill
-    update('rooms', f'{this_month}.{room}.payment', payment)
     update('rooms', f'{this_month}.{room}.prepayment', prepayment_this)
+    next_month = today + relativedelta(months=1)
+    while prepayment_this > 0:
+        if datetime.strftime(next_month,"%Y%m") not in rooms[room]['prepayment'] or rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] == 0 or rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] is None:
+            pre_add = rooms[room]['rent_price'] if rooms[room]['rent_price'] < prepayment_this else prepayment_this
+            pre_in = pre_add
+        else:
+            pre_add = rooms[room]['rent_price'] - rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] if rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] < rooms[room]['rent_price'] else 0 
+            pre_in = rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] + pre_add
+        prepayment_this -= pre_add 
+        update('rooms', f'{this_month}.{room}.prepayment.{datetime.strftime(new_month, "%Y%m")}', pre_in)
+        next_month = next_month + relativedelta(months=1)
+    update('rooms', f'{this_month}.{room}.payment', payment)
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
     print(f"{room} marked paid {payment:,.0f} at {datetime.strftime(today, "%d/%m/%Y")}")
     add_trans('vietinbank', this_month, timeStamp, {"amount": this_pay,"date": datetime.strftime(today, "%d/%m/%Y"),"pay_for": "principal","pay_type": "credit","remark": f"{room} pay {this_month}","followed": "", "followed_id":""})
