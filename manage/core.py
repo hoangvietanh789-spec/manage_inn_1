@@ -158,7 +158,7 @@ def tinhtien(*month_input):
             info['water_end'] = 0 if info['water_end'] == None else info['water_end']
             info['water_start'] = 0 if info['water_start'] == None else info['water_start']
             info['payment'] = 0 if info['payment'] == None else info['payment']
-            if this_month in info['prepayment']:           
+            if isinstance(info['prepayment'], dict) and this_month in info['prepayment']:           
                 prepayment = info['prepayment'][this_month] or 0
             else:
                 prepayment = 0
