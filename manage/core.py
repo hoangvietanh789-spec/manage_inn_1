@@ -118,7 +118,7 @@ def tinhtien(*month_input):
 
         bill = info["rent_price"] or 0
         payment = info["payment"] or 0
-        prepayment = info['prepayment'] or 0
+        prepayment = info['prepayment'][this_month] or 0
 
         bill = bill + electric_fee if electric_fee >= 0 else bill
         bill = bill +  water_fee if water_fee >= 0 else bill
@@ -156,7 +156,7 @@ def tinhtien(*month_input):
             info['water_end'] = 0 if info['water_end'] == None else info['water_end']
             info['water_start'] = 0 if info['water_start'] == None else info['water_start']
             info['payment'] = 0 if info['payment'] == None else info['payment']
-            info['prepayment'] = 0 if info['prepayment'] == None else info['prepayment']
+            # info['prepayment'] = 0 if info['prepayment'] == None else info['prepayment']
            
             all_records.append({
                 "month": month,
@@ -167,7 +167,7 @@ def tinhtien(*month_input):
                 "electric_fee": info["electric_fee"],
                 "water_fee": info["water_fee"],
                 "bill": info["bill"],
-                "prepayment": info["prepayment"],
+                "prepayment": info["prepayment"][this_month],
                 "payment": info["payment"],
                 "due_amount": info["due_amount"],
                 "status": info["status"],
