@@ -118,8 +118,10 @@ def tinhtien(*month_input):
 
         bill = info["rent_price"] or 0
         payment = info["payment"] or 0
-        prepayment = info['prepayment'][this_month] or 0
-
+        if this_month in info['prepayment']:           
+            prepayment = info['prepayment'][this_month] or 0
+        else:
+            prepayment = 0
         bill = bill + electric_fee if electric_fee >= 0 else bill
         bill = bill +  water_fee if water_fee >= 0 else bill
         if bill <= prepayment:
