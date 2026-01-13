@@ -158,7 +158,7 @@ def tinhtien(*month_input):
             info['water_end'] = 0 if info['water_end'] == None else info['water_end']
             info['water_start'] = 0 if info['water_start'] == None else info['water_start']
             info['payment'] = 0 if info['payment'] == None else info['payment']
-            # info['prepayment'] = 0 if info['prepayment'] == None else info['prepayment']
+            info['prepayment'][this_month] = info['prepayment'].get(this_month, 0)
            
             all_records.append({
                 "month": month,
