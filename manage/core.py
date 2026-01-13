@@ -1056,7 +1056,7 @@ def pay():
     payment = paid + this_pay
     if payment > bill:
         prepayment_this = prepayment_this + payment - bill
-    update('rooms', f'{this_month}.{room}.prepayment', prepayment_this)
+    update('rooms', f'{this_month}.{room}.prepayment_this', prepayment_this)
     next_month = today + relativedelta(months=1)
     while prepayment_this > 0:
         if datetime.strftime(next_month,"%Y%m") not in rooms[room]['prepayment'] or rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] == 0 or rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] is None:
