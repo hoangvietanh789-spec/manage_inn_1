@@ -1066,7 +1066,7 @@ def pay():
             pre_add = rooms[room]['rent_price'] - rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] if rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] < rooms[room]['rent_price'] else 0 
             pre_in = rooms[room]['prepayment'][datetime.strftime(next_month,"%Y%m")] + pre_add
         prepayment_this -= pre_add 
-        update('rooms', f'{this_month}.{room}.prepayment.{datetime.strftime(new_month, "%Y%m")}', pre_in)
+        update('rooms', f'{this_month}.{room}.prepayment.{datetime.strftime(next_month, "%Y%m")}', pre_in)
         next_month = next_month + relativedelta(months=1)
     update('rooms', f'{this_month}.{room}.payment', payment)
     update('rooms', f'{this_month}.{room}.payment_date', datetime.strftime(today, "%d/%m/%Y"))
