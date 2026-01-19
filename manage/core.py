@@ -17,6 +17,21 @@ Created on Mon Nov 17 14:58:00 2025
 # file_cashflow = com + "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 # file_hangthang = com + "/content/drive/MyDrive/Dau_tu/report/Hang thang.xlsx"
 
+# =============================================================================
+# mount drive folder
+# =============================================================================
+def safe_mount_drive(mount_point="/content/drive"):
+    # if com  == 'E:/SETUP/Task_UAT/invest':
+    #     return
+    import os
+    import io
+    import contextlib
+    from google.colab import drive
+    if not os.path.ismount(mount_point):
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            drive.mount(mount_point)
+
 db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
 file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
 file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
@@ -26,7 +41,6 @@ file_cashbanoi = "/content/drive/MyDrive/Dau_tu/report/cash_banoi.xlsx"
 file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
 file_cashflow = "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 file_hangthang = "/content/drive/MyDrive/Dau_tu/report/Hang thang.xlsx"
-
 
 
 def brief():
@@ -61,20 +75,7 @@ def brief():
         
 """)
 
-# =============================================================================
-# mount drive folder
-# =============================================================================
-def safe_mount_drive(mount_point="/content/drive"):
-    # if com  == 'E:/SETUP/Task_UAT/invest':
-    #     return
-    import os
-    import io
-    import contextlib
-    from google.colab import drive
-    if not os.path.ismount(mount_point):
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
-            drive.mount(mount_point)
+
             
 # =============================================================================
 # Tính toán số tiền phải thanh toán của phòng theo tháng nhập/ tất cả
@@ -555,6 +556,7 @@ def new_month():
     automap_tenant() # tự động rà soát cập nhật lại thông tin người thuê, chỉ lấy thông tin người thuê đang active. lấy đúng room người thuê
     
     from openpyxl import load_workbook
+    from openpyxl.styles import Font
     wb = load_workbook(file_hangthang)
     source_sheet = wb[datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')]
     new_sheet = wb.copy_worksheet(source_sheet)
@@ -575,6 +577,7 @@ def new_month():
     for col in ['F','G','H','I','J','K','L']:
         for row in range(3,row_max+1):
             new_sheet[f"{col}{row}"] = None
+            new_sheet[f"{col}{row}"].font = Font(strike=False)
     wb._sheets.remove(new_sheet)
     wb._sheets.insert(0, new_sheet)
     wb.save(file_hangthang)
