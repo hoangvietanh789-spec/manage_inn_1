@@ -3,15 +3,19 @@ Created on Mon Nov 17 14:58:00 2025
 
 @author: admin
 """
+import os
+print(os.getcwd())
 
-db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
-file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
-file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
-file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
-file_account = "/content/drive/MyDrive/Dau_tu/data/accounts.json"
-file_cashbanoi = "/content/drive/MyDrive/Dau_tu/report/cash_banoi.xlsx"
-file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
-file_cashflow =  "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
+com = 'E:/SETUP/Task_UAT/invest' if os.getcwd() == 'E:\SETUP\Task_UAT\invest' else ''
+db_file = com + "/content/drive/MyDrive/Dau_tu/data/inn.db"
+file_price = com + "/content/drive/MyDrive/Dau_tu/data/prices.json"
+file_room = com + "/content/drive/MyDrive/Dau_tu/data/rooms.json"
+file_tenant = com + "/content/drive/MyDrive/Dau_tu/data/tenants.json"
+file_account = com + "/content/drive/MyDrive/Dau_tu/data/accounts.json"
+file_cashbanoi = com + "/content/drive/MyDrive/Dau_tu/report/cash_banoi.xlsx"
+file_report = com + "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
+file_cashflow = com + "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
+file_hangthang = com + "/content/drive/MyDrive/Dau_tu/report/Hang thang.xlsx"
 
 
 def brief():
@@ -50,6 +54,8 @@ def brief():
 # mount drive folder
 # =============================================================================
 def safe_mount_drive(mount_point="/content/drive"):
+    if com  == 'E:/SETUP/Task_UAT/invest':
+        return
     import os
     import io
     import contextlib
@@ -536,6 +542,32 @@ def new_month():
     conn.commit()
     conn.close()
     automap_tenant() # tự động rà soát cập nhật lại thông tin người thuê, chỉ lấy thông tin người thuê đang active. lấy đúng room người thuê
+    
+    from openpyxl import load_workbook
+    wb = load_workbook(file_hangthang)
+    source_sheet = wb[datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')]
+    new_sheet = wb.copy_worksheet(source_sheet)
+    new_sheet.title = datetime.strftime(datetime.now(),'%m-%Y')    
+    row_max = max(new_sheet["C1"].value, new_sheet["D1"].value)
+    new_sheet["C1"] = 10
+    new_sheet["D1"] = 10
+    new_sheet["B1"] = None
+    new_sheet["B2"] = None
+    new_sheet["B8"] = None
+    new_sheet["B9"] = None
+    new_sheet["B11"] = None
+    new_sheet["B12"] = None
+    new_sheet["B14"] = None
+    new_sheet["B15"] = None
+    new_sheet["C17"] = f"='{datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')}'!B17"
+    new_sheet["C18"] = f"='{datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')}'!B18"
+    for col in ['F','G','H','I','J','K','L']:
+        for row in range(3,row_max+1):
+            new_sheet[f"{col}{row}"] = None
+    wb._sheets.remove(new_sheet)
+    wb._sheets.insert(0, new_sheet)
+    wb.save(file_hangthang)
+    
     print(new_month, "initialized. Reset any room: ")
     room_reset = input().upper()
     if room_reset == '':
@@ -885,6 +917,7 @@ def doanhthu():
     df.to_sql("cashflow", conn, if_exists="replace", index=False)
     conn.close()
     print("Đã cập nhật cashflow")
+    
 
 # import sqlite3
 # conn = sqlite3.connect(db_file)
@@ -1119,6 +1152,40 @@ def unpay():
 # =============================================================================
 # 
 # =============================================================================
+def update_excel(sheet_name, col, value, row = None):
+    from openpyxl import load_workbook
+
+    # load workbook (không phá format)
+    wb = load_workbook(file_hangthang)
+
+    # chọn sheet
+    ws = wb[sheet_name]
+
+    if col in ['G','K'] and row is None:
+        if col == "G":
+            max_row = ws["C1"].value
+            ws["C1"].value = max_row + 1
+        elif col == 'K':
+            max_row = ws["D1"].value
+            ws["D1"].value = max_row + 1
+        for row_r in range(1, max_row + 1):
+            if ws[f"{col}{row_r}"].value not in (None, ""):
+                last_row = row_r
+        row = last_row + 1
+                   
+    # chỉ thay đổi VALUE của cell
+    if col in ['H','I','L'] and row == 2:
+        ws[f"{col}{row}"].value = value
+    elif col in ['B','H','I', 'L']:
+        current_value = ws[f"{col}{row}"].value if ws[f"{col}{row}"].value is not None else 0
+        ws[f"{col}{row}"].value = current_value + value
+    else:
+        ws[f"{col}{row}"].value = value
+    
+    # lưu lại file
+    wb.save(file_hangthang)   
+    return(row)
+
 def brief_bid():
     print("""
         ====================================
@@ -1314,6 +1381,10 @@ def bid_thauchi_u():
     followed = 'yes' if ask_follow == '' else ''
     timeStamp = time.time()
     add_trans('overdraft_unsecured', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark, "followed": followed, "followed_id":""})
+    row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "G", remark)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "H", -amount, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "F", date, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "H", f"=Sum(H3:H{row_u})", 2)
 # =============================================================================
 # Tiêu thấu có tài sản
 # =============================================================================
@@ -1366,6 +1437,8 @@ def bid_tranomon():
             add_trans('loan_45', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, principal, str(timeStamp))
+            update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "B", principal, 9)
+            update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "B", principal, 14)
         if interest != 0:
             timeStamp = time.time()
             add_trans('loan_45', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
@@ -1418,6 +1491,8 @@ def bid_trathauchi_u():
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
             add_trans('vietinbank', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
             chikhac1(date, remark, principal, str(timeStamp))
+            update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "B", principal, 9)
+            update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "B", principal, 15)
         if interest != 0:
             timeStamp = time.time()
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
@@ -1426,6 +1501,10 @@ def bid_trathauchi_u():
     else:
         if principal != 0:
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": principal,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark, "followed": "", "followed_id":followed_id})
+            row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "G", remark)
+            update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", principal, row_u)
+            update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "F", date, row_u)
+            update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", f"=Sum(I3:I{row_u})", 2)
         if interest != 0:
             timeStamp = time.time()
             add_trans('overdraft_unsecured', month, timeStamp, {"amount": interest,"date": date,"pay_for": "interest","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
@@ -1504,7 +1583,10 @@ def bid_chikhac():
     remark = 'chichung_' + input("remark: ")
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": "", "followed_id":""})
-    
+    row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "K", remark)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "L", -amount, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "J", date, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "L", f"=Sum(L3:L{row_u})", 2)
 # =============================================================================
 # ứng tiền từ dda vào thấu chi 
 # =============================================================================
@@ -1530,13 +1612,18 @@ def bid_ungtien():
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": '', "followed_id":""})
     add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "debit","remark": remark,"followed": followed, "followed_id":""})
+    row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "G", remark)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", amount, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "F", date, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", f"=Sum(I3:I{row_u})", 2)
+    
 # =============================================================================
 # hoàn lương từ thấu chi vào bidv qua vietinbank
 # =============================================================================
 def bid_hoantien():
     from datetime import datetime
     import time
-    amount = int(input('thuong: '))
+    amount = int(input('amount: '))
     if amount == 0:
         print('amount = 0')
         return
@@ -1555,6 +1642,10 @@ def bid_hoantien():
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": '', "followed_id":""})
     add_trans(overdraft, month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": followed, "followed_id":""})
+    row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "G", remark)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "H", -amount, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "F", date, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "H", f"=Sum(H3:H{row_u})", 2)
 # =============================================================================
 # ghi có các khoản lương vào BIDV
 # =============================================================================
@@ -1573,6 +1664,7 @@ def bid_luong():
     remark = "salary_" + input("remark: ")
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
+        
 # =============================================================================
 # ghi có các khoản thưởng vào BIDV
 # =============================================================================
@@ -1594,6 +1686,11 @@ def bid_thuong():
     remark = "bonus_" + input("remark: ")
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
+    row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "G", 'Thưởng')
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", amount, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "F", date, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", f"=Sum(I3:I{row_u})", 2)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "B", amount, 11)
 # =============================================================================
 # Bà nội trả
 # =============================================================================
@@ -1615,3 +1712,8 @@ def bid_banoi():
     remark = "banoi_" + month
     timeStamp = time.time()
     add_trans('bidv', month, timeStamp, {"amount": amount,"date": date,"pay_for": "principal","pay_type": "credit","remark": remark,"followed": "", "followed_id":""})
+    row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "G", 'Bà trả')
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", amount, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "F", date, row_u)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "I", f"=Sum(I3:I{row_u})", 2)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "B", amount, 12)
