@@ -3,19 +3,30 @@ Created on Mon Nov 17 14:58:00 2025
 
 @author: admin
 """
-import os
-print(os.getcwd())
+# import os
+# print(os.getcwd())
 
-com = 'E:/SETUP/Task_UAT/invest' if os.getcwd() == 'E:\SETUP\Task_UAT\invest' else ''
-db_file = com + "/content/drive/MyDrive/Dau_tu/data/inn.db"
-file_price = com + "/content/drive/MyDrive/Dau_tu/data/prices.json"
-file_room = com + "/content/drive/MyDrive/Dau_tu/data/rooms.json"
-file_tenant = com + "/content/drive/MyDrive/Dau_tu/data/tenants.json"
-file_account = com + "/content/drive/MyDrive/Dau_tu/data/accounts.json"
-file_cashbanoi = com + "/content/drive/MyDrive/Dau_tu/report/cash_banoi.xlsx"
-file_report = com + "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
-file_cashflow = com + "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
-file_hangthang = com + "/content/drive/MyDrive/Dau_tu/report/Hang thang.xlsx"
+# com = 'E:/SETUP/Task_UAT/invest' if os.getcwd() == 'E:\SETUP\Task_UAT\invest' else ''
+# db_file = com + "/content/drive/MyDrive/Dau_tu/data/inn.db"
+# file_price = com + "/content/drive/MyDrive/Dau_tu/data/prices.json"
+# file_room = com + "/content/drive/MyDrive/Dau_tu/data/rooms.json"
+# file_tenant = com + "/content/drive/MyDrive/Dau_tu/data/tenants.json"
+# file_account = com + "/content/drive/MyDrive/Dau_tu/data/accounts.json"
+# file_cashbanoi = com + "/content/drive/MyDrive/Dau_tu/report/cash_banoi.xlsx"
+# file_report = com + "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
+# file_cashflow = com + "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
+# file_hangthang = com + "/content/drive/MyDrive/Dau_tu/report/Hang thang.xlsx"
+
+db_file = "/content/drive/MyDrive/Dau_tu/data/inn.db"
+file_price = "/content/drive/MyDrive/Dau_tu/data/prices.json"
+file_room = "/content/drive/MyDrive/Dau_tu/data/rooms.json"
+file_tenant = "/content/drive/MyDrive/Dau_tu/data/tenants.json"
+file_account = "/content/drive/MyDrive/Dau_tu/data/accounts.json"
+file_cashbanoi = "/content/drive/MyDrive/Dau_tu/report/cash_banoi.xlsx"
+file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"  
+file_cashflow = "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
+file_hangthang = "/content/drive/MyDrive/Dau_tu/report/Hang thang.xlsx"
+
 
 
 def brief():
@@ -54,8 +65,8 @@ def brief():
 # mount drive folder
 # =============================================================================
 def safe_mount_drive(mount_point="/content/drive"):
-    if com  == 'E:/SETUP/Task_UAT/invest':
-        return
+    # if com  == 'E:/SETUP/Task_UAT/invest':
+    #     return
     import os
     import io
     import contextlib
