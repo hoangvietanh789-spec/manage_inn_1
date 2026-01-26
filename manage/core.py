@@ -1182,7 +1182,7 @@ def update_excel(sheet_name, col, value, row = None):
         elif col == 'K':
             max_row = ws["D1"].value
             ws["D1"].value = max_row + 1
-        for row_r in range(1, max_row + 1):
+        for row_r in range(1, int(max_row) + 1):
             if ws[f"{col}{row_r}"].value not in (None, ""):
                 last_row = row_r
         row = last_row + 1
