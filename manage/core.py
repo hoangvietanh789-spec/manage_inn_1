@@ -566,18 +566,34 @@ def new_month():
     new_sheet["D1"] = 10
     new_sheet["B1"] = None
     new_sheet["B2"] = None
+    new_sheet["B6"] = "=-L2"
+    new_sheet["B7"] = "=B6+SUM(B1:B3)"
     new_sheet["B8"] = None
     new_sheet["B9"] = None
+    new_sheet["B10"] = 19000000
     new_sheet["B11"] = None
     new_sheet["B12"] = None
+    new_sheet["B13"] = "=SUM(B8:B12)-B7"
     new_sheet["B14"] = None
     new_sheet["B15"] = None
+    new_sheet["B17"] = "=C17+B14"
+    new_sheet["B18"] = "=C18+J2+N2+B15"
+    new_sheet["B19"] = "=B17+B18"
     new_sheet["C17"] = f"='{datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')}'!B17"
     new_sheet["C18"] = f"='{datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')}'!B18"
+    new_sheet["D19"] = "=D17+D18"
+    new_sheet["E17"] = "=B17-D17"
+    new_sheet["E18"] = "=B18-D18"
+    new_sheet["E19"] = "=E17+E18"
     for col in ['F','G','H','I','J','K','L']:
         for row in range(3,row_max+1):
             new_sheet[f"{col}{row}"] = None
             new_sheet[f"{col}{row}"].font = Font(strike=False)
+    new_sheet["H2"] = "=sum(H3:H10)"
+    new_sheet["I2"] = "=sum(I3:I10)"
+    new_sheet["J2"] = "=I2+H2"
+    new_sheet["L2"] = "=sum(L3:L10)"
+    new_sheet["N2"] = "=sum(N3:N10)"
     wb._sheets.remove(new_sheet)
     wb._sheets.insert(0, new_sheet)
     wb.save(file_hangthang)
