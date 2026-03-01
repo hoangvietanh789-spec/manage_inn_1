@@ -586,7 +586,7 @@ def new_month():
     new_sheet["E18"] = "=B18-D18"
     new_sheet["E19"] = "=E17+E18"
     for col in ['F','G','H','I','J','K','L']:
-        for row in range(3,row_max+1):
+        for row in range(3,int(row_max)+1):
             new_sheet[f"{col}{row}"] = None
             new_sheet[f"{col}{row}"].font = Font(strike=False)
     new_sheet["H2"] = "=sum(H3:H10)"
