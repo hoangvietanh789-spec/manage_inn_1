@@ -199,7 +199,7 @@ def tinhtien(*month_input):
     - Tiền thuê: {info["rent_price"]:,.0f}
     - Tiền điện: {info["electric_fee"]:,.0f} = ({info["electric_end"]:,.0f} - {info["electric_start"]:,.0f}) * {electric_price:,.0f}đ/kWh
     - Tiền nước: {info["water_fee"]:,.0f} = ({info["water_end"]:,.0f} - {info["water_start"]:,.0f}) * {water_price:,.0f}đ/m3
-    - Đã thanh toán/trả trước: {info["payment"]:,.0f}
+    - Đã thanh toán/trả trước: {prepayment:,.0f}
     - Còn thiếu: {info["due_amount"]:,.0f}
     Số tài khoản: 106000316181 - Vietinbank - Hoàng Việt Anh"""
             })
