@@ -566,6 +566,7 @@ def new_month():
     
 
 def add_sheet_excel():
+    safe_mount_drive()
     from datetime import datetime
     from dateutil.relativedelta import relativedelta
     from openpyxl import load_workbook
