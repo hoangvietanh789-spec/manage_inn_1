@@ -553,14 +553,31 @@ def new_month():
     conn.execute(sql, (new_month, json.dumps(data[new_month]), 1))
     conn.commit()
     conn.close()
-    automap_tenant() # tự động rà soát cập nhật lại thông tin người thuê, chỉ lấy thông tin người thuê đang active. lấy đúng room người thuê
+    automap_tenant() # tự động rà soát cập nhật lại thông tin người thuê, chỉ lấy thông tin người thuê đang active. lấy đúng room người thuê   
+    add_sheet_excel()
+    print(new_month, "initialized. Reset any room: ")
+    room_reset = input().upper()
+    if room_reset == '':
+        return
+    if room_reset not in ["R1", "R2", "R3", "R4", "R5"]:
+        print(room_reset, 'not in ["R1", "R2", "R3", "R4", "R5"]')
+        return
+    reset_room(room_reset)
     
+
+def add_sheet_excel():
+    from datetime import datetime
+    from dateutil.relativedelta import relativedelta
     from openpyxl import load_workbook
     from openpyxl.styles import Font
     wb = load_workbook(file_hangthang)
+    check_sheet = datetime.strftime(datetime.now(),'%m-%Y')
+    if check_sheet in wb.sheetnames:
+        print(check_sheet, " - Sheet đã tồn tại")
+        return
     source_sheet = wb[datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')]
     new_sheet = wb.copy_worksheet(source_sheet)
-    new_sheet.title = datetime.strftime(datetime.now(),'%m-%Y')    
+    new_sheet.title = check_sheet
     row_max = max(new_sheet["C1"].value, new_sheet["D1"].value)
     new_sheet["C1"] = 10
     new_sheet["D1"] = 10
@@ -599,16 +616,6 @@ def new_month():
     wb._sheets.remove(new_sheet)
     wb._sheets.insert(0, new_sheet)
     wb.save(file_hangthang)
-    
-    print(new_month, "initialized. Reset any room: ")
-    room_reset = input().upper()
-    if room_reset == '':
-        return
-    if room_reset not in ["R1", "R2", "R3", "R4", "R5"]:
-        print(room_reset, 'not in ["R1", "R2", "R3", "R4", "R5"]')
-        return
-    reset_room(room_reset)
-    
 # =============================================================================
 # reset info of room for fresh
 # =============================================================================
