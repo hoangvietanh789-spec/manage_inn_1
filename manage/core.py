@@ -583,12 +583,14 @@ def new_month():
     new_sheet["C18"] = f"='{datetime.strftime(datetime.now() - relativedelta(months = 1), '%m-%Y')}'!B18"
     new_sheet["D19"] = "=D17+D18"
     new_sheet["E17"] = "=B17-D17"
-    new_sheet["E18"] = "=B18-D18"
+    new_sheet["E18"] = "=B18-D18+sum(B23:B24)"
     new_sheet["E19"] = "=E17+E18"
     for col in ['F','G','H','I','J','K','L']:
         for row in range(3,int(row_max) + 1):
             new_sheet[f"{col}{row}"] = None
             new_sheet[f"{col}{row}"].font = Font(strike=False)
+    new_sheet["F2"] = "dd/mm/yyyy"
+    new_sheet["G2"] = "Tổng"
     new_sheet["H2"] = "=sum(H3:H10)"
     new_sheet["I2"] = "=sum(I3:I10)"
     new_sheet["J2"] = "=I2+H2"
