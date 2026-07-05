@@ -580,15 +580,17 @@ def add_sheet_excel():
     new_sheet = wb.copy_worksheet(source_sheet)
     new_sheet.title = check_sheet
     row_max = max(new_sheet["C1"].value, new_sheet["D1"].value)
-    new_sheet["C1"] = 10
-    new_sheet["D1"] = 10
+    org = 30
+    new_sheet["C1"] = org
+    new_sheet["D1"] = org
     new_sheet["B1"] = None
     new_sheet["B2"] = None
+    new_sheet["B3"] = None
     new_sheet["B6"] = "=-L2"
     new_sheet["B7"] = "=B6+SUM(B1:B3)"
     new_sheet["B8"] = None
     new_sheet["B9"] = None
-    new_sheet["B10"] = 19000000
+    new_sheet["B10"] = 20_000_000
     new_sheet["B11"] = None
     new_sheet["B12"] = None
     new_sheet["B13"] = "=SUM(B8:B12)-B7"
@@ -609,11 +611,11 @@ def add_sheet_excel():
             new_sheet[f"{col}{row}"].font = Font(strike=False)
     new_sheet["F2"] = "dd/mm/yyyy"
     new_sheet["G2"] = "Tổng"
-    new_sheet["H2"] = "=sum(H3:H10)"
-    new_sheet["I2"] = "=sum(I3:I10)"
+    new_sheet["H2"] = f"=sum(H3:H{org})"
+    new_sheet["I2"] = f"=sum(I3:I{org})"
     new_sheet["J2"] = "=I2+H2"
-    new_sheet["L2"] = "=sum(L3:L10)"
-    new_sheet["N2"] = "=sum(N3:N10)"
+    new_sheet["L2"] = f"=sum(L3:L{org})"
+    new_sheet["N2"] = f"=sum(N3:N{org})"
     wb._sheets.remove(new_sheet)
     wb._sheets.insert(0, new_sheet)
     wb.save(file_hangthang)
@@ -1424,7 +1426,7 @@ def bid_thauchi_u():
     row_u = update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "G", remark)
     update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "H", -amount, row_u)
     update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "F", date, row_u)
-    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "H", f"=Sum(H3:H{row_u})", 2)
+    update_excel(f"{datetime.strftime(datetime.now(),'%m-%Y')}", "H", f"=Sum(H3:H{max(row_u,ws["C1"].value)})", 2)
 # =============================================================================
 # Tiêu thấu có tài sản
 # =============================================================================
