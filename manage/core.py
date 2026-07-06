@@ -309,7 +309,7 @@ def querydf(table):
     df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
     conn.close()
     cols=[i for i in df.columns if i in cols_format]
-    df[cols] = df[cols].apply(lambda s: pd.to_numeric(s, errors='coerce').map('{:,.0f}'.format).str.replace(',', 'X').str.replace('.', ',').str.replace('X', '.'))
+    df[cols] = df[cols].apply(lambda s: pd.to_numeric(s, errors='coerce').map('{:,.0f}'.format))
     return df
 
 # =============================================================================
