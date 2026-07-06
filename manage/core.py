@@ -297,6 +297,10 @@ def query(table):
 # =============================================================================
 # trả df các bảng cashflow, tong_diennuoc, chikhac
 # =============================================================================
+cols_format = {'So_dien','Tien_dien','Gia_dien','So_nuoc','Tien_nuoc','Gia_nuoc', 
+               'Số tiền thu', 'Tiền điện', 'Tiền nước', 'Số tiền chi',
+                'sotien_chi'}
+
 def querydf(table):
     safe_mount_drive()
     import pandas as pd
@@ -304,6 +308,8 @@ def querydf(table):
     conn = sqlite3.connect(db_file)
     df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
     conn.close()
+    cols=[i in df.columns if i in cols_format]
+    df[cols] = df[cols].apply(lambda s: pd.to_numeric(s, errors='coerce').map('{:,.0f}'.format).str.replace(',', 'X').str.replace('.', ',').str.replace('X', '.'))
     return df
 
 # =============================================================================
