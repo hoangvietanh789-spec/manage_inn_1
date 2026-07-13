@@ -308,6 +308,14 @@ def querydf(table):
     conn = sqlite3.connect(db_file)
     df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
     conn.close()
+    return df
+def querydfview(table):
+    safe_mount_drive()
+    import pandas as pd
+    import sqlite3
+    conn = sqlite3.connect(db_file)
+    df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
+    conn.close()
     cols=[i for i in df.columns if i in cols_format]
     df[cols] = df[cols].apply(lambda s: pd.to_numeric(s, errors='coerce').map('{:,.0f}'.format))
     return df
