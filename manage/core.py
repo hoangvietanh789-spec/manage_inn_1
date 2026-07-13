@@ -42,6 +42,10 @@ file_report = "/content/drive/MyDrive/Dau_tu/report/rent_report.xlsx"
 file_cashflow = "/content/drive/MyDrive/Dau_tu/report/cash_flow.xlsx"  
 file_hangthang = "/content/drive/MyDrive/Dau_tu/report/Hang thang.xlsx"
 
+cols_format = {'So_dien','Tien_dien','Gia_dien','So_nuoc','Tien_nuoc','Gia_nuoc', 
+               'Số tiền thu', 'Tiền điện', 'Tiền nước', 'Số tiền chi',
+                'sotien_chi'}
+
 
 def brief():
     print("""
@@ -59,6 +63,7 @@ def brief():
         ====================================
             query(): trả json các bảng rooms, tenants, prices
             querydf(): trả df các bảng cashflow, tong_diennuoc, chikhac
+            querydfview(): trả df các bảng cashflow, tong_diennuoc, chikhac, edit các cột số (cols_format) để hiển thị dạng tiền tệ
         ====================================
             view(): Mở link web
         ====================================
@@ -297,10 +302,6 @@ def query(table):
 # =============================================================================
 # trả df các bảng cashflow, tong_diennuoc, chikhac
 # =============================================================================
-cols_format = {'So_dien','Tien_dien','Gia_dien','So_nuoc','Tien_nuoc','Gia_nuoc', 
-               'Số tiền thu', 'Tiền điện', 'Tiền nước', 'Số tiền chi',
-                'sotien_chi'}
-
 def querydf(table):
     safe_mount_drive()
     import pandas as pd
