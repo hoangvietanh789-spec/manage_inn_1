@@ -601,8 +601,10 @@ def add_sheet_excel():
     new_sheet["B1"] = None
     new_sheet["B2"] = None
     new_sheet["B3"] = None
-    new_sheet["B6"] = "=-L2"
-    new_sheet["B7"] = "=B6+SUM(B1:B3)"
+    # new_sheet["B6"] = "=-L2"
+    new_sheet["B5"] = "=SUM(B1:B3)"
+    new_sheet["B7"] = None
+    new_sheet["C7"] = "=B7-B2"
     new_sheet["B8"] = None
     new_sheet["B9"] = None
     new_sheet["B10"] = 20_000_000
