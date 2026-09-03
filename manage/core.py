@@ -1019,8 +1019,8 @@ def tong_diennuoc():
     
     so_dien = int(input("so_dien: "))
     tien_dien = int(input("tien_dien: "))
-    sonuoc = int(input("sonuoc: "))
-    tiennuoc = int(input("tiennuoc: "))    
+    so_nuoc = int(input("so_nuoc: "))
+    tien_nuoc = int(input("tien_nuoc: "))    
     
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
