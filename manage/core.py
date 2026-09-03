@@ -215,7 +215,7 @@ def tinhtien(*month_input):
     
     # Xuất dữ liệu ra Excel bằng pandas + openpyxl
     df = pd.DataFrame(all_records)
-    df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] not in [0,'0'] else row['notify'][row['notify'].find("- Tiền điện:")-6:row['notify'].find("đ/m3")], axis = 1) # bỏ notify các dòng đẫ thanh toán
+    df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] not in [0,'0'] else row['notify'][row['notify'].find("- Tiền điện:")-7:row['notify'].find("đ/m3")], axis = 1) # bỏ notify các dòng đẫ thanh toán
     df['zalo_link'] = df.apply(lambda row: row['zalo_link'] if row['due_amount'] not in [0,'0'] else '', axis = 1) # bỏ zalo_link các dòng đẫ thanh toán
     df = df[df['status'] != 'available'] # bỏ bớt các dòng chưa cho thuê
     col_remain = list(df.columns) 
