@@ -108,7 +108,9 @@ def tinhtien(*month_input):
 
     data = query('rooms')
     all_records = []
-    print(list(data.keys()).sort()[:3])
+    list_keys = list(data.keys())[-3:]
+    list_keys.sort(reverse=True)
+    print(list_keys)
     month_tocal = [this_month] 
     if len(month_input) == 0:
         ask = input("Month to calculate [add / all]: ")
