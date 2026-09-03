@@ -260,7 +260,7 @@ def tinhtien(*month_input):
             ws.cell(row=row, column=zalo_col).value = f"Zalo {room} {name}"
             ws.cell(row=row, column=zalo_col).style = "Hyperlink"
     ws.freeze_panes = "A2"
-    ws.auto_filter.ref = ws.dimensions
+    ws.auto_filter.ref = f"A1:{get_column_letter(ws.max_column)}{ws.max_row}"
     wb.save(file_report)
     
     with open(file_room, "w", encoding="utf-8") as f:
