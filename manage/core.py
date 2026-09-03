@@ -200,12 +200,13 @@ def tinhtien(*month_input):
                 "due_amount": info["due_amount"],
                 "status": info["status"],
                 "zalo_link": f"https://zalo.me/{info['phone']}" if info.get("phone") else "",
-                "notify":f"""Tổng: {info["bill"]:,.0f}, trong đó:
-    - Tiền thuê: {info["rent_price"]:,.0f}
-    - Tiền điện: {info["electric_fee"]:,.0f} = ({info["electric_end"]:,.0f} - {info["electric_start"]:,.0f}) * {electric_price:,.0f}đ/kWh
-    - Tiền nước: {info["water_fee"]:,.0f} = ({info["water_end"]:,.0f} - {info["water_start"]:,.0f}) * {water_price:,.0f}đ/m3
-    - Đã thanh toán/trả trước: {prepayment:,.0f}
-    - Còn thiếu: {info["due_amount"]:,.0f}
+                "notify":f"""{room} - {info['name']}
+    Tổng: {info["bill"]:,.0f}, trong đó:
+       - Tiền thuê: {info["rent_price"]:,.0f}
+       - Tiền điện: {info["electric_fee"]:,.0f} = ({info["electric_end"]:,.0f} - {info["electric_start"]:,.0f}) * {electric_price:,.0f}đ/kWh
+       - Tiền nước: {info["water_fee"]:,.0f} = ({info["water_end"]:,.0f} - {info["water_start"]:,.0f}) * {water_price:,.0f}đ/m3
+       - Đã thanh toán/trả trước: {prepayment:,.0f}
+       - Còn thiếu: {info["due_amount"]:,.0f}
     Số tài khoản: 106000316181 - Vietinbank - Hoàng Việt Anh"""
             })
             
@@ -215,7 +216,7 @@ def tinhtien(*month_input):
     
     # Xuất dữ liệu ra Excel bằng pandas + openpyxl
     df = pd.DataFrame(all_records)
-    df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] not in [0,'0'] else '', axis = 1) # bỏ notify các dòng đẫ thanh toán
+    df['notify'] = df.apply(lambda row: row['notify'] if row['due_amount'] not in [0,'0'] else row['notify'][row['notify'].find("- Tiền điện:"):row['notify'].find("- Đã thanh toán")], axis = 1) # bỏ notify các dòng đẫ thanh toán
     df['zalo_link'] = df.apply(lambda row: row['zalo_link'] if row['due_amount'] not in [0,'0'] else '', axis = 1) # bỏ zalo_link các dòng đẫ thanh toán
     df = df[df['status'] != 'available'] # bỏ bớt các dòng chưa cho thuê
     col_remain = list(df.columns) 
