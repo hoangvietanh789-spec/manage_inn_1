@@ -999,7 +999,7 @@ def doanhthu():
 # Nhập số tiền chi điện nước
 # tong_diennuoc("{this_month}", sodien, tien dien, sonuoc, tiennuoc)
 # =============================================================================
-def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
+def tong_diennuoc():
     safe_mount_drive()
     import sqlite3
     import math
@@ -1009,13 +1009,19 @@ def tong_diennuoc(month, so_dien, tien_dien, so_nuoc, tien_nuoc):
     today = datetime.now()
     this_month = datetime.strftime(today, "%Y%m")
 
+    month = input("month - %Y%m: ")
     if month != this_month:
         print("Tháng không phải tháng hiện tại")
         ask = input("Có muốn tiếp tục không [yessss]: ").lower()
         if ask != 'yessss':
             return
     month_water_el = datetime.strftime(datetime.strptime(str(month), "%Y%m") - relativedelta(months=1), "%Y%m")
-
+    
+    so_dien = int(input("so_dien: "))
+    tien_dien = int(input("tien_dien: "))
+    sonuoc = int(input("sonuoc: "))
+    tiennuoc = int(input("tiennuoc: "))    
+    
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
 
