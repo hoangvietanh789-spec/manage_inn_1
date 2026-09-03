@@ -191,6 +191,7 @@ def tinhtien(*month_input):
                 "month": month,
                 "room": room + "-" + info["name"],
                 "tenant": info["phone"],
+                "name": info["name"],
                 "rent_price": info["rent_price"],
                 "electric_fee": info["electric_fee"],
                 "water_fee": info["water_fee"],
