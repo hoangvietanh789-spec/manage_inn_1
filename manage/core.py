@@ -1158,9 +1158,8 @@ def pay():
         ask = input(message)
         if ask.upper() != "Y":
             return
-    this_pay = input("Payment [auto]: ")
-    this_pay = int(this_pay) if this_pay != '' else bill
-    
+    this_pay = input("Payment [a = auto]: ")
+    this_pay = int(this_pay) if this_pay.isnumeric() else bill if this_pay == 'a' else 0    
     payment = paid + this_pay
     if payment > bill:
         prepayment_this = prepayment_this + payment - bill
