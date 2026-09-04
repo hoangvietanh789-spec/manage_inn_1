@@ -1152,6 +1152,7 @@ def pay():
         return
     paid = rooms[room]['payment']
     bill = rooms[room]['bill']
+    due_amount = rooms[room]['due_amount']
     prepayment_this = rooms[room]['prepayment_this']
     if paid != 0:
         message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
@@ -1159,7 +1160,7 @@ def pay():
         if ask.upper() != "Y":
             return
     this_pay = input("Payment [a = auto]: ")
-    this_pay = int(this_pay) if this_pay.isnumeric() else bill if this_pay == 'a' else 0    
+    this_pay = int(this_pay) if this_pay.isnumeric() else due_amount if this_pay == 'a' else 0    
     payment = paid + this_pay
     if payment > bill:
         prepayment_this = prepayment_this + payment - bill
