@@ -1154,6 +1154,7 @@ def pay():
     bill = rooms[room]['bill']
     due_amount = rooms[room]['due_amount']
     prepayment_this = rooms[room]['prepayment_this']
+    print(f"{room} - bill: {bill} - due: {due_amount}")
     if paid != 0:
         message = f"{room} already paid: {paid:,.0f}\n[y] to continue: "
         ask = input(message)
